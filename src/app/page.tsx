@@ -19,7 +19,6 @@ async function getData(url: string) {
   }
 
   const data = await res.json();
-  console.log(data);
   return data.rows;
 }
 
@@ -31,6 +30,8 @@ export default async function Home() {
 
   const squirrel_glider_data = await getData(squirrel_glider_url);
   const transect_data = await getData(transect_url);
+  console.log(transect_data);
+
   const data = { squirrel_glider_data, transect_data };
   return (
     <main>
