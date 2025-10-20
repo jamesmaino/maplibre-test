@@ -12,17 +12,32 @@ import {
   RSource,
   RLayer,
 } from "maplibre-react-components";
-import { FeatureCollection } from "geojson";
+import { Feature, FeatureCollection, Geometry } from "geojson";
+import { stringify } from "querystring";
 
 function Map({ data }: { data: MapData }) {
   const transectFeatures: FeatureCollection = {
     type: "FeatureCollection",
-    features: data.transect_data.map((transect) => ({
-      ...transect,
-      type: "Feature",
-      properties: {},
-      geometry: transect._geometry,
-    })),
+    features: data.transect_data.map((transect) => {
+      const { _geometry, ...properties } = transect;
+      return {
+        type: "Feature",
+        properties,
+        geometry: transect._geometry,
+      };
+    }),
+  };
+
+  const historicalDataFeatures: FeatureCollection = {
+    type: "FeatureCollection",
+    features: data.historical_data.map((site) => {
+      const { _geometry, polygon_points, ...properties } = site;
+      return {
+        type: "Feature",
+        properties,
+        geometry: site._geometry,
+      };
+    }),
   };
 
   const [showData, setShowData] = useState(true);
@@ -72,7 +87,7 @@ function Map({ data }: { data: MapData }) {
                 key={point.observation_id}
                 longitude={point._longitude}
                 latitude={point._latitude}
-                onClick={() => window.alert(JSON.stringify(point))}
+                onClick={() => window.alert(JSON.stringify(point, null, 2))}
               >
                 <CustomMarker />
               </RMarker>
@@ -82,7 +97,15 @@ function Map({ data }: { data: MapData }) {
               id="transects-fill"
               source="transects"
               type="fill"
-              onClick={() => window.alert(JSON.stringify(transectFeatures))}
+              onClick={(e) =>
+                window.alert(
+                  JSON.stringify(
+                    e.features && e.features[0].properties,
+                    null,
+                    2
+                  )
+                )
+              }
               paint={{
                 "fill-color": "#36ffff44",
               }}
@@ -93,6 +116,37 @@ function Map({ data }: { data: MapData }) {
               type="line"
               paint={{
                 "line-color": "#36ffff",
+                "line-width": 2,
+              }}
+            />
+            <RSource
+              id="historical-sites"
+              type="geojson"
+              data={historicalDataFeatures}
+            />
+            <RLayer
+              id="historical-sites-fill"
+              source="historical-sites"
+              type="fill"
+              onClick={(e) =>
+                window.alert(
+                  JSON.stringify(
+                    e.features && e.features[0].properties,
+                    null,
+                    2
+                  )
+                )
+              }
+              paint={{
+                "fill-color": "#ff363644",
+              }}
+            />
+            <RLayer
+              id="historical-sites-line"
+              source="historical-sites"
+              type="line"
+              paint={{
+                "line-color": "#ff3636",
                 "line-width": 2,
               }}
             />
