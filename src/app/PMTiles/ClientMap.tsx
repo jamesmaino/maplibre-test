@@ -25,7 +25,9 @@ export default function ClientMap() {
           sources: {
             sample: {
               type: "vector",
+              // url: "pmtiles://https://storage.googleapis.com/conservation-pmtiles/NV2005_EVCBCS_subset.pmtiles",
               url: "pmtiles://https://r2-public.protomaps.com/protomaps-sample-datasets/cb_2018_us_zcta510_500k.pmtiles",
+              // url: "pmtiles://test.pmtiles",
             },
           },
           layers: [
