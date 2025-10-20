@@ -3,6 +3,9 @@
 import CustomMarker from "./CustomMarker";
 import { MapData } from "./ClientMap";
 import { useState } from "react";
+import { useEffect } from "react";
+import { Protocol } from "pmtiles";
+import maplibregl from "maplibre-gl";
 
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
@@ -40,6 +43,14 @@ function Map({ data }: { data: MapData }) {
     }),
   };
 
+  useEffect(() => {
+    const protocol = new Protocol();
+    maplibregl.addProtocol("pmtiles", protocol.tile);
+    return () => {
+      maplibregl.removeProtocol("pmtiles");
+    };
+  }, []);
+
   const [showData, setShowData] = useState(true);
 
   return (
@@ -61,6 +72,10 @@ function Map({ data }: { data: MapData }) {
               attribution: "&copy; OpenStreetMap Contributors",
               maxzoom: 15,
             },
+            protomaps: {
+              type: "vector",
+              url: "pmtiles://https://storage.googleapis.com/conservation-pmtiles/NV2005_EVCBCS_subset.pmtiles",
+            },
             carto: {
               type: "vector",
               url: "https://tiles.basemaps.cartocdn.com/vector/carto.streets/v1/tiles.json",
@@ -75,6 +90,46 @@ function Map({ data }: { data: MapData }) {
               id: "osm",
               type: "raster",
               source: "osm",
+              "raster-fade-duration": 2,
+              paint: {
+                "raster-saturation": -1.0,
+                "raster-contrast": -0.2,
+                "raster-brightness-min": 0.1,
+                "raster-brightness-max": 0.9,
+              }
+            },
+            {
+              id: "vic",
+              type: "vector",
+              source: "protomaps",
+              "source-layer": "NV2005_EVCBCS_subset",
+              type: "fill",
+              paint: {
+                'fill-color': [
+                  'match', ["get", "Group"],
+                  // TODO make these colors variables
+                  "Herb-rich Woodlands", "#3B243C",
+                  "Plains Grasslands and Chenopod Shrublands", "#2B3313",
+                  "Riverine Grassy Woodlands or Forests", "#262C48",
+                  "Mallee", "#083441",
+                  "Lower Slopes or Hills Woodlands", "#3F290E",
+                  "Dry Forests", "#0C372C",
+                  "#442324",
+                ],
+                'fill-opacity': 0.2
+              },
+            },
+            {
+              id: "carto",
+              type: "vector",
+              source: "carto",
+              "source-layer": "transportation",
+              type: "line",
+              paint: {
+                'line-color': "#333333",
+                'line-opacity': 0.5,
+                'line-width': 2.5,
+              },
             },
           ],
         }}
@@ -107,7 +162,8 @@ function Map({ data }: { data: MapData }) {
                 )
               }
               paint={{
-                "fill-color": "#36ffff44",
+                "fill-color": "#FED0D1",
+                "fill-opacity": 0.5,
               }}
             />
             <RLayer
@@ -115,8 +171,9 @@ function Map({ data }: { data: MapData }) {
               source="transects"
               type="line"
               paint={{
-                "line-color": "#36ffff",
+                "line-color": "#FED0D1",
                 "line-width": 2,
+                "line-opacity": 0.5,
               }}
             />
             <RSource

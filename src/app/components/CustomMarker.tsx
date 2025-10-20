@@ -3,7 +3,7 @@ import { memo } from "react";
 function CustomMarker() {
   return (
     <svg
-      height={50}
+      height={35}
       viewBox="0 0 620 620" // NOTE: Paw icon uses a 576x512 viewBox
       style={{ cursor: "pointer", fill: "#21db3d" }}
     >
