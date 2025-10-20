@@ -20,12 +20,26 @@ import { FeatureCollection } from "geojson";
 function Map({ data }: { data: MapData }) {
   const transectFeatures: FeatureCollection = {
     type: "FeatureCollection",
-    features: data.transect_data.map((transect) => ({
-      ...transect,
-      type: "Feature",
-      properties: {},
-      geometry: transect._geometry,
-    })),
+    features: data.transect_data.map((transect) => {
+      const { _geometry, ...properties } = transect;
+      return {
+        type: "Feature",
+        properties,
+        geometry: transect._geometry,
+      };
+    }),
+  };
+
+  const historicalDataFeatures: FeatureCollection = {
+    type: "FeatureCollection",
+    features: data.historical_data.map((site) => {
+      const { _geometry, polygon_points, ...properties } = site;
+      return {
+        type: "Feature",
+        properties,
+        geometry: site._geometry,
+      };
+    }),
   };
 
   useEffect(() => {
@@ -75,45 +89,22 @@ function Map({ data }: { data: MapData }) {
               id: "osm",
               type: "raster",
               source: "osm",
-              "raster-fade-duration": 2,
               paint: {
                 "raster-saturation": -1.0,
                 "raster-contrast": -0.2,
                 "raster-brightness-min": 0.1,
                 "raster-brightness-max": 0.9,
-              }
-            },
-            {
-              id: "vic",
-              type: "vector",
-              source: "protomaps",
-              "source-layer": "NV2005_EVCBCS_subset",
-              type: "fill",
-              paint: {
-                'fill-color': [
-                  'match', ["get", "Group"],
-                  // TODO make these colors variables
-                  "Herb-rich Woodlands", "#3B243C",
-                  "Plains Grasslands and Chenopod Shrublands", "#2B3313",
-                  "Riverine Grassy Woodlands or Forests", "#262C48",
-                  "Mallee", "#083441",
-                  "Lower Slopes or Hills Woodlands", "#3F290E",
-                  "Dry Forests", "#0C372C",
-                  "#442324",
-                ],
-                'fill-opacity': 0.2
               },
             },
             {
               id: "carto",
-              type: "vector",
               source: "carto",
               "source-layer": "transportation",
               type: "line",
               paint: {
-                'line-color': "#333333",
-                'line-opacity': 0.5,
-                'line-width': 2.5,
+                "line-color": "#333333",
+                "line-opacity": 0.5,
+                "line-width": 2.5,
               },
             },
           ],
@@ -122,12 +113,42 @@ function Map({ data }: { data: MapData }) {
         <RNavigationControl />
         {showData ? (
           <>
+            <RLayer
+              id="vic"
+              source="protomaps"
+              source-layer="NV2005_EVCBCS_subset"
+              type="fill"
+              paint={{
+                "fill-color": [
+                  "match",
+                  ["get", "Group"],
+                  // TODO make these colors variables
+                  "Herb-rich Woodlands",
+                  "#3B243C",
+                  "Plains Grasslands and Chenopod Shrublands",
+                  "#2B3313",
+                  "Riverine Grassy Woodlands or Forests",
+                  "#262C48",
+                  "Mallee",
+                  "#083441",
+                  "Lower Slopes or Hills Woodlands",
+                  "#3F290E",
+                  "Dry Forests",
+                  "#0C372C",
+                  "#442324",
+                ],
+                "fill-opacity": 0.2,
+              }}
+              onClick={(e) =>
+                console.log(e.features && e.features[0].properties)
+              }
+            />
             {data.squirrel_glider_data.map((point) => (
               <RMarker
                 key={point.observation_id}
                 longitude={point._longitude}
                 latitude={point._latitude}
-                onClick={() => window.alert(JSON.stringify(point))}
+                onClick={() => console.log(point)}
               >
                 <CustomMarker />
               </RMarker>
@@ -137,7 +158,9 @@ function Map({ data }: { data: MapData }) {
               id="transects-fill"
               source="transects"
               type="fill"
-              onClick={() => window.alert(JSON.stringify(transectFeatures))}
+              onClick={(e) =>
+                console.log(e.features && e.features[0].properties)
+              }
               paint={{
                 "fill-color": "#FED0D1",
                 "fill-opacity": 0.5,
@@ -153,6 +176,31 @@ function Map({ data }: { data: MapData }) {
                 "line-opacity": 0.5,
               }}
             />
+            <RSource
+              id="historical-sites"
+              type="geojson"
+              data={historicalDataFeatures}
+            />
+            <RLayer
+              id="historical-sites-fill"
+              source="historical-sites"
+              type="fill"
+              onClick={(e) =>
+                console.log(e.features && e.features[0].properties)
+              }
+              paint={{
+                "fill-color": "#96bb0644",
+              }}
+            />
+            <RLayer
+              id="historical-sites-line"
+              source="historical-sites"
+              type="line"
+              paint={{
+                "line-color": "#96bb06",
+                "line-width": 2,
+              }}
+            />
           </>
         ) : (
           ""
@@ -160,7 +208,7 @@ function Map({ data }: { data: MapData }) {
       </RMap>
       <div className="absolute left-4 top-4 bg-black px-2 py-0 rounded-xl">
         <button onClick={() => setShowData((r) => !r)}>
-          {showData ? "hide" : "show"}
+          {showData ? "hide layers" : "show layers"}
         </button>
       </div>
     </div>

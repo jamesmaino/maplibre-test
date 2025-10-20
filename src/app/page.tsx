@@ -23,16 +23,65 @@ async function getData(url: string) {
 }
 
 export default async function Home() {
-  const squirrel_glider_url =
-    "https://api.fulcrumapp.com/api/v2/query?q=SELECT%20%20%20%20%20_child_record_id%20AS%20observation_id%2C%20%20%20%20%20_parent_id%20AS%20parent_record_id%2C%20%20%20%20%20common_name%2C%20%20%20%20%20scientific_name%2C%20%20%20%20%20number_of_individuals%2C%20%20%20%20%20behaviour_notes%2C%20%20%20%20%20_latitude%2C%20%20%20%20%20_longitude%2C%20%20%20%20%20_geometry%20FROM%20%20%20%20%20%22Project%20Platypus%20field%20crew%20logging%2Fanimals_observed%22%20WHERE%20%20%20%20%20common_name%20%3D%20%27Squirrel%20Glider%20%27%20ORDER%20BY%20%20%20%20%20_parent_id%3B&format=json&headers=true&metadata=false&arrays=false&page=1&per_page=20000";
-  const transect_url =
-    "https://api.fulcrumapp.com/api/v2/query?q=SELECT%20%20%20%20%20%2A%20FROM%20%20%20%20%20%22Project%20Platypus%20field%20crew%20logging%22%20WHERE%20%20%20%20%27Glider%20survey%27%20%3D%20ANY%28activity_type%29%20AND%20is_this_a_day_or_night_survey%20%3D%20%27night%27%20%20%20%20%20AND%20is_this_a_day_or_night_survey%20IS%20NOT%20NULL&format=json&headers=true&metadata=false&arrays=false&page=1&per_page=20000";
+  const historicalSitesQuery = `
+    SELECT
+        *
+    FROM
+        "LOOKUP TABLE Long Term Sites Jallukar LCG"
+  `;
+  // color code by site_type
+  // popup: show all other variables
+
+  const squirrelGliderQuery = `
+    SELECT
+        _child_record_id AS observation_id,
+        _parent_id AS parent_record_id,
+        common_name,
+        scientific_name,
+        number_of_individuals,
+        behaviour_notes,
+        _latitude,
+        _longitude,
+        _geometry
+    FROM
+        "Project Platypus field crew logging/animals_observed"
+    WHERE
+        common_name = 'Squirrel Glider '
+    ORDER BY
+        _parent_id;
+  `;
+
+  const transectQuery = `
+    SELECT
+        *
+    FROM
+        "Project Platypus field crew logging"
+    WHERE
+        'Glider survey' = ANY(activity_type)
+        AND is_this_a_day_or_night_survey = 'night'
+        AND is_this_a_day_or_night_survey IS NOT NULL
+  `;
+
+  const baseUrl = "https://api.fulcrumapp.com/api/v2/query";
+  const params =
+    "format=json&headers=true&metadata=false&arrays=false&page=1&per_page=20000";
+
+  const squirrel_glider_url = `${baseUrl}?q=${encodeURIComponent(
+    squirrelGliderQuery
+  )}&${params}`;
+  const transect_url = `${baseUrl}?q=${encodeURIComponent(
+    transectQuery
+  )}&${params}`;
+  const historical_url = `${baseUrl}?q=${encodeURIComponent(
+    historicalSitesQuery
+  )}&${params}`;
 
   const squirrel_glider_data = await getData(squirrel_glider_url);
   const transect_data = await getData(transect_url);
-  console.log(transect_data);
+  const historical_data = await getData(historical_url);
+  console.log(historical_data);
 
-  const data = { squirrel_glider_data, transect_data };
+  const data = { squirrel_glider_data, transect_data, historical_data };
   return (
     <main>
       <ClientMap data={data} />

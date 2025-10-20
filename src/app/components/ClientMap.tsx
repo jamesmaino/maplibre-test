@@ -25,9 +25,19 @@ export interface Transect {
   _geometry: Geometry;
 }
 
+export interface HistoricalData {
+  _record_id: string;
+  _latitude: number;
+  _longitude: number;
+  _geometry: Geometry;
+  polygon_points: string;
+  site_name: string;
+}
+
 export interface MapData {
   squirrel_glider_data: Observation[];
   transect_data: Transect[];
+  historical_data: HistoricalData[];
 }
 
 export default function ClientMap({ data }: { data: MapData }) {
