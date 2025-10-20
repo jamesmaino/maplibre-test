@@ -16,6 +16,7 @@ import {
   RLayer,
 } from "maplibre-react-components";
 import { FeatureCollection } from "geojson";
+import RDraw from "./RDraw";
 
 function Map({ data }: { data: MapData }) {
   const transectFeatures: FeatureCollection = {
@@ -53,7 +54,7 @@ function Map({ data }: { data: MapData }) {
   const [showData, setShowData] = useState(true);
 
   return (
-    <div className="w-full h-screen">
+    <div className="w-full h-screen" style={{ position: "relative", zIndex: 0 }}>
       <RMap
         initialCenter={[142.5, -37]}
         initialZoom={10}
@@ -110,6 +111,11 @@ function Map({ data }: { data: MapData }) {
           ],
         }}
       >
+        <RDraw
+          onCreate={(e) => console.log("onCreate", e)}
+          onUpdate={(e) => console.log("onUpdate", e)}
+          onDelete={(e) => console.log("onDelete", e)}
+        />
         <RNavigationControl />
         {showData ? (
           <>

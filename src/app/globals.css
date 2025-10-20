@@ -31,3 +31,18 @@ body {
   margin: 0;
   padding: 0;
 }
+
+.mapboxgl-ctrl-group {
+  z-index: 10 !important;
+  pointer-events: auto !important;
+}
+
+.mapboxgl-ctrl-group button {
+  width: 50px !important;
+  height: 50px !important;
+  background-size: 30px 30px !important;
+}
+
+.mapboxgl-draw-activated .mapboxgl-canvas-container.mapboxgl-interactive {
+  cursor: crosshair;
+}
