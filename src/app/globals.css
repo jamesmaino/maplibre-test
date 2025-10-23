@@ -46,3 +46,24 @@ body {
 .mapboxgl-draw-activated .mapboxgl-canvas-container.mapboxgl-interactive {
   cursor: crosshair;
 }
+
+.inverted-tooltip .maplibregl-popup-content {
+  background-color: #333;
+  color: #fff;
+}
+
+.inverted-tooltip.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: #333;
+}
+
+.inverted-tooltip.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: #333;
+}
+
+.inverted-tooltip.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: #333;
+}
+
+.inverted-tooltip.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: #333;
+}

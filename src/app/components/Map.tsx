@@ -27,9 +27,21 @@ function Map({ data }: { data: MapData }) {
     properties: any;
   } | null>(null);
 
+  const [tooltipInfo, setTooltipInfo] = useState<{
+    longitude: number;
+    latitude: number;
+    properties: any;
+  } | null>(null);
+  const [tooltipTimeout, setTooltipTimeout] = useState<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
-    console.log(popupInfo);
-  }, [popupInfo]);
+    if (popupInfo) {
+      if (tooltipTimeout) {
+        clearTimeout(tooltipTimeout);
+      }
+      setTooltipInfo(null);
+    }
+  }, [popupInfo, tooltipTimeout]);
 
   const transectFeatures: FeatureCollection = {
     type: "FeatureCollection",
@@ -171,6 +183,34 @@ function Map({ data }: { data: MapData }) {
                 ],
                 "fill-opacity": 0.2,
               }}
+              onMouseMove={(e) => {
+                if (tooltipTimeout) {
+                  clearTimeout(tooltipTimeout);
+                }
+
+                if (popupInfo) return;
+
+                if (e.features && e.features.length > 0) {
+                  const topFeature = e.features[0];
+                  const timeout = setTimeout(() => {
+                    if (popupInfo) return;
+                    setTooltipInfo({
+                      longitude: e.lngLat.lng,
+                      latitude: e.lngLat.lat,
+                      properties: { EVC: topFeature.properties.EVC_name },
+                    });
+                  }, 500);
+                  setTooltipTimeout(timeout);
+                } else {
+                  setTooltipInfo(null);
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (tooltipTimeout) {
+                  clearTimeout(tooltipTimeout);
+                }
+                setTooltipInfo(null);
+              }}
             />
             {data.birdData.map((station) => {
               const speciesCount = station.speciesData?.total || 0;
@@ -302,6 +342,21 @@ function Map({ data }: { data: MapData }) {
             >
               ×
             </button>
+          </RPopup>
+        )}
+        {tooltipInfo && (
+          <RPopup
+            className="inverted-tooltip"
+            longitude={tooltipInfo.longitude}
+            latitude={tooltipInfo.latitude}
+            onMapMove={() => setTooltipInfo(null)}
+          >
+            <div className="px-1 text-xs">
+              <p>
+                <span className="font-semibold">EVC:</span>{" "}
+                {String(tooltipInfo.properties.EVC)}
+              </p>
+            </div>
           </RPopup>
         )}
       </RMap>
