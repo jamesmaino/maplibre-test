@@ -6,7 +6,7 @@ import { MapData } from "./ClientMap";
 import { useState } from "react";
 import { useEffect } from "react";
 import { Protocol } from "pmtiles";
-import maplibregl from "maplibre-gl";
+import maplibregl, { MapLayerMouseEvent } from "maplibre-gl";
 
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
@@ -15,10 +15,21 @@ import {
   RNavigationControl,
   RSource,
   RLayer,
+  RPopup,
 } from "maplibre-react-components";
 import { FeatureCollection } from "geojson";
 
 function Map({ data }: { data: MapData }) {
+  const [popupInfo, setPopupInfo] = useState<{
+    longitude: number;
+    latitude: number;
+    properties: any;
+  } | null>(null);
+
+  useEffect(() => {
+    console.log(popupInfo);
+  }, [popupInfo]);
+
   const transectFeatures: FeatureCollection = {
     type: "FeatureCollection",
     features: data.transect_data.map((transect) => {
@@ -59,7 +70,16 @@ function Map({ data }: { data: MapData }) {
         [])
     ) || 0;
 
-  console.log({ maxSpeciesTotals });
+  const handleMapClick = (e: MapLayerMouseEvent) => {
+    if (e.features && e.features.length > 0) {
+      const topFeature = e.features[0];
+      setPopupInfo({
+        longitude: e.lngLat.lng,
+        latitude: e.lngLat.lat,
+        properties: topFeature.properties,
+      });
+    }
+  };
 
   return (
     <div className="w-full h-screen">
@@ -115,6 +135,7 @@ function Map({ data }: { data: MapData }) {
             },
           ],
         }}
+        onClick={handleMapClick}
       >
         <RNavigationControl />
         {showData ? (
@@ -144,9 +165,6 @@ function Map({ data }: { data: MapData }) {
                 ],
                 "fill-opacity": 0.2,
               }}
-              onClick={(e) =>
-                console.log(e.features && e.features[0].properties)
-              }
             />
             {data.birdData.map((station) => {
               const speciesCount = station.speciesData?.total || 0;
@@ -156,11 +174,22 @@ function Map({ data }: { data: MapData }) {
                   key={station.id}
                   longitude={station.coords.lon}
                   latitude={station.coords.lat}
-                  onClick={() => console.log(station)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPopupInfo({
+                      longitude: station.coords.lon,
+                      latitude: station.coords.lat,
+                      properties: {
+                        total_birds: station?.speciesData?.total
+                          ? station?.speciesData.total
+                          : null,
+                      },
+                    });
+                  }}
                 >
                   <PucMarker
                     speciesCount={speciesCount}
-                    baseColor="3B243C"
+                    baseColor="#3B243C"
                     upper={maxSpeciesTotals}
                   />
                 </RMarker>
@@ -171,7 +200,14 @@ function Map({ data }: { data: MapData }) {
                 key={point.observation_id}
                 longitude={point._longitude}
                 latitude={point._latitude}
-                onClick={() => console.log(point)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPopupInfo({
+                    longitude: point._longitude,
+                    latitude: point._latitude,
+                    properties: point,
+                  });
+                }}
               >
                 <CustomMarker />
               </RMarker>
@@ -181,9 +217,6 @@ function Map({ data }: { data: MapData }) {
               id="transects-fill"
               source="transects"
               type="fill"
-              onClick={(e) =>
-                console.log(e.features && e.features[0].properties)
-              }
               paint={{
                 "fill-color": "#FED0D1",
                 "fill-opacity": 0.5,
@@ -208,11 +241,16 @@ function Map({ data }: { data: MapData }) {
               id="historical-sites-fill"
               source="historical-sites"
               type="fill"
-              onClick={(e) =>
-                console.log(e.features && e.features[0].properties)
-              }
               paint={{
                 "fill-color": "#96bb0644",
+              }}
+              onClick={(e) => {
+                setPopupInfo({
+                  longitude: e.lngLat.lng,
+                  latitude: e.lngLat.lat,
+                  properties: e.features ? e.features[0].properties : null,
+                });
+                console.log(e.features && e.features[0].properties);
               }}
             />
             <RLayer
@@ -227,6 +265,38 @@ function Map({ data }: { data: MapData }) {
           </>
         ) : (
           ""
+        )}
+        {popupInfo && (
+          <RPopup
+            className="text-black"
+            longitude={popupInfo.longitude}
+            latitude={popupInfo.latitude}
+            onMapMove={() => setPopupInfo(null)}
+            onMapClick={() => setPopupInfo(null)}
+          >
+            {/* Assuming popupInfo is an object containing the feature properties */}
+            <div className="p-2 text-xs">
+              <h4 className="font-bold mb-1">Feature Info</h4>
+
+              {Object.entries(popupInfo.properties)
+                // Filter out keys (the first item in the array) that START with '_'
+                .filter(([key]) => !key.startsWith("_"))
+
+                // Map the filtered entries to your JSX elements
+                .map(([key, value]) => (
+                  <p key={key} className="text-slate-600">
+                    <span className="font-semibold">{key}:</span>{" "}
+                    {String(value)}
+                  </p>
+                ))}
+            </div>
+            <button
+              className="w-4 h-4 text-lg maplibregl-popup-close-button"
+              onClick={() => setPopupInfo(null)}
+            >
+              ×
+            </button>
+          </RPopup>
         )}
       </RMap>
       <div className="absolute left-4 top-4 bg-black px-2 py-0 rounded-xl">
