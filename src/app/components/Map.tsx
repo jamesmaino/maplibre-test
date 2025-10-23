@@ -18,6 +18,7 @@ import {
   RPopup,
 } from "maplibre-react-components";
 import { FeatureCollection } from "geojson";
+import RDraw from "./RDraw";
 
 function Map({ data }: { data: MapData }) {
   const [popupInfo, setPopupInfo] = useState<{
@@ -82,7 +83,7 @@ function Map({ data }: { data: MapData }) {
   };
 
   return (
-    <div className="w-full h-screen">
+    <div className="w-full h-screen" style={{ position: "relative", zIndex: 0 }}>
       <RMap
         initialCenter={[142.5, -37]}
         initialZoom={10}
@@ -137,6 +138,11 @@ function Map({ data }: { data: MapData }) {
         }}
         onClick={handleMapClick}
       >
+        <RDraw
+          onCreate={(e) => console.log("onCreate", e)}
+          onUpdate={(e) => console.log("onUpdate", e)}
+          onDelete={(e) => console.log("onDelete", e)}
+        />
         <RNavigationControl />
         {showData ? (
           <>
