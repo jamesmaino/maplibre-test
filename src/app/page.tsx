@@ -22,6 +22,40 @@ async function getData(url: string) {
   return data.rows;
 }
 
+async function postData(query: string, variables: object) {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      query,
+      variables,
+    }),
+    next: { revalidate: 86400 }, // Revalidate once a day
+  };
+
+  const res = await fetch("https://app.birdweather.com/graphql", options);
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch data from BirdWeather API");
+  }
+
+  const data = await res.json();
+  return data.data;
+}
+
+interface Station {
+  id: string;
+  name: string;
+  location: string;
+  coords: {
+    lat: number;
+    lon: number;
+  };
+}
+
 export default async function Home() {
   const historicalSitesQuery = `
     SELECT
@@ -79,9 +113,89 @@ export default async function Home() {
   const squirrel_glider_data = await getData(squirrel_glider_url);
   const transect_data = await getData(transect_url);
   const historical_data = await getData(historical_url);
-  console.log(historical_data);
 
-  const data = { squirrel_glider_data, transect_data, historical_data };
+  const stationsQuery = `
+    query StationsInBox(
+      $ne: InputLocation!
+      $sw: InputLocation!
+    ) {
+      stations(ne: $ne, sw: $sw) {
+        nodes {
+          id
+          name
+          location
+          coords {
+            lat
+            lon
+          }
+        }
+      }
+    }
+  `;
+
+  const speciesQuery = `
+    query DailySpeciesBreakdown(
+      $stationId: [ID!]!
+      $timePeriod: InputDuration
+    ) {
+      dailyDetectionCounts(
+        stationIds: $stationId
+        period: $timePeriod
+      ) {
+        date
+        total
+        counts {
+          count
+          species {
+            id
+            commonName
+            scientificName
+          }
+        }
+      }
+    }
+  `;
+
+  const stationVariables = {
+    ne: {
+      lat: -36.87034,
+      lon: 143.157963,
+    },
+    sw: {
+      lat: -37.25989,
+      lon: 142.428217,
+    },
+  };
+
+  const stationsData = await postData(stationsQuery, stationVariables);
+  const stations = stationsData.stations.nodes;
+
+  const stationSpeciesPromises = stations.map((station: Station) => {
+    const speciesVariables = {
+      stationId: [station.id],
+      timePeriod: { count: 1, unit: "day" },
+    };
+    return postData(speciesQuery, speciesVariables);
+  });
+
+  const speciesResults = await Promise.all(stationSpeciesPromises);
+
+  const birdData = stations.map((station: Station, index: number) => {
+    const speciesData = speciesResults[index]?.dailyDetectionCounts[0];
+    return {
+      ...station,
+      speciesData: speciesData || null,
+    };
+  });
+
+  console.log(stationsData);
+
+  const data = {
+    squirrel_glider_data,
+    transect_data,
+    historical_data,
+    birdData,
+  };
   return (
     <main>
       <ClientMap data={data} />

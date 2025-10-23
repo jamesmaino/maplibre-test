@@ -1,6 +1,7 @@
 "use client";
 
 import CustomMarker from "./CustomMarker";
+import PucMarker from "./PucMarker";
 import { MapData } from "./ClientMap";
 import { useState } from "react";
 import { useEffect } from "react";
@@ -52,6 +53,14 @@ function Map({ data }: { data: MapData }) {
 
   const [showData, setShowData] = useState(true);
 
+  const maxSpeciesTotals =
+    Math.max(
+      ...(data.birdData.map((station) => station?.speciesData?.total ?? 0) ||
+        [])
+    ) || 0;
+
+  console.log({ maxSpeciesTotals });
+
   return (
     <div className="w-full h-screen">
       <RMap
@@ -63,9 +72,6 @@ function Map({ data }: { data: MapData }) {
           sources: {
             osm: {
               type: "raster",
-              // tiles: [
-              //   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-              // ],
               tiles: ["https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"],
               tileSize: 256,
               attribution: "&copy; OpenStreetMap Contributors",
@@ -122,7 +128,6 @@ function Map({ data }: { data: MapData }) {
                 "fill-color": [
                   "match",
                   ["get", "Group"],
-                  // TODO make these colors variables
                   "Herb-rich Woodlands",
                   "#3B243C",
                   "Plains Grasslands and Chenopod Shrublands",
@@ -143,6 +148,24 @@ function Map({ data }: { data: MapData }) {
                 console.log(e.features && e.features[0].properties)
               }
             />
+            {data.birdData.map((station) => {
+              const speciesCount = station.speciesData?.total || 0;
+
+              return (
+                <RMarker
+                  key={station.id}
+                  longitude={station.coords.lon}
+                  latitude={station.coords.lat}
+                  onClick={() => console.log(station)}
+                >
+                  <PucMarker
+                    speciesCount={speciesCount}
+                    baseColor="3B243C"
+                    upper={maxSpeciesTotals}
+                  />
+                </RMarker>
+              );
+            })}
             {data.squirrel_glider_data.map((point) => (
               <RMarker
                 key={point.observation_id}
