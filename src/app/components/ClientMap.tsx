@@ -34,10 +34,33 @@ export interface HistoricalData {
   site_name: string;
 }
 
+export interface BirdData {
+  id: string;
+  name: string;
+  location: string | null;
+  coords: {
+    lat: number;
+    lon: number;
+  };
+  speciesData: {
+    date: string;
+    total: number;
+    counts: {
+      count: number;
+      species: {
+        id: string;
+        commonName: string;
+        scientificName: string;
+      };
+    }[];
+  } | null;
+}
+
 export interface MapData {
   squirrel_glider_data: Observation[];
   transect_data: Transect[];
   historical_data: HistoricalData[];
+  birdData: BirdData[];
 }
 
 export default function ClientMap({ data }: { data: MapData }) {
