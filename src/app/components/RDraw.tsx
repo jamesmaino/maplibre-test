@@ -1,14 +1,21 @@
 "use client";
 import { useMap } from "maplibre-react-components";
-import { useEffect, useState } from "react";
-import MapboxDraw from "@mapbox/mapbox-gl-draw";
-import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
+import { useEffect, useState, memo } from "react";
+import MaplibreDraw from "maplibre-gl-draw";
+import "maplibre-gl-draw/dist/mapbox-gl-draw.css";
+import { Feature } from "geojson";
 
-function RDraw(props) {
+interface RDrawProps {
+  onCreate: (features: Feature[]) => void;
+  onUpdate: (features: Feature[]) => void;
+  onDelete: (features: Feature[]) => void;
+}
+
+function RDraw(props: RDrawProps) {
   const map = useMap();
   const [draw] = useState(
     () =>
-      new MapboxDraw({
+      new MaplibreDraw({
         displayControlsDefault: false,
         controls: {
           point: true,
@@ -144,11 +151,11 @@ function RDraw(props) {
   );
 
   useEffect(() => {
-    map.addControl(draw);
+    map.addControl(draw as any);
 
     const mapCanvas = map.getCanvas();
 
-    const onModeChange = (e) => {
+    const onModeChange = (e: any) => {
       if (
         e.mode === "draw_polygon" ||
         e.mode === "draw_line_string" ||
@@ -161,13 +168,13 @@ function RDraw(props) {
     };
 
     map.on("draw.modechange", onModeChange);
-    map.on("draw.create", (e) => {
+    map.on("draw.create", (e: any) => {
       props.onCreate(e.features);
     });
-    map.on("draw.update", (e) => {
+    map.on("draw.update", (e: any) => {
       props.onUpdate(e.features);
     });
-    map.on("draw.delete", (e) => {
+    map.on("draw.delete", (e: any) => {
       props.onDelete(e.features);
     });
     return () => {
@@ -180,4 +187,4 @@ function RDraw(props) {
   return null;
 }
 
-export default RDraw;
+export default memo(RDraw);
