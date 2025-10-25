@@ -3,8 +3,7 @@
 import CustomMarker from "./CustomMarker";
 import PucMarker from "./PucMarker";
 import { MapData } from "./ClientMap";
-import { useState } from "react";
-import { useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Protocol } from "pmtiles";
 import maplibregl, { MapLayerMouseEvent } from "maplibre-gl";
 
@@ -19,6 +18,7 @@ import {
 } from "maplibre-react-components";
 import { FeatureCollection } from "geojson";
 import RDraw from "./RDraw";
+import TooltipLayer from "./TooltipLayer";
 
 function Map({ data }: { data: MapData }) {
   const [popupInfo, setPopupInfo] = useState<{
@@ -26,22 +26,6 @@ function Map({ data }: { data: MapData }) {
     latitude: number;
     properties: any;
   } | null>(null);
-
-  const [tooltipInfo, setTooltipInfo] = useState<{
-    longitude: number;
-    latitude: number;
-    properties: any;
-  } | null>(null);
-  const [tooltipTimeout, setTooltipTimeout] = useState<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    if (popupInfo) {
-      if (tooltipTimeout) {
-        clearTimeout(tooltipTimeout);
-      }
-      setTooltipInfo(null);
-    }
-  }, [popupInfo, tooltipTimeout]);
 
   const transectFeatures: FeatureCollection = {
     type: "FeatureCollection",
@@ -151,67 +135,14 @@ function Map({ data }: { data: MapData }) {
         onClick={handleMapClick}
       >
         <RDraw
-          onCreate={(e) => console.log("onCreate", e)}
-          onUpdate={(e) => console.log("onUpdate", e)}
-          onDelete={(e) => console.log("onDelete", e)}
+          onCreate={useCallback((e) => console.log("onCreate", e), [])}
+          onUpdate={useCallback((e) => console.log("onUpdate", e), [])}
+          onDelete={useCallback((e) => console.log("onDelete", e), [])}
         />
         <RNavigationControl />
         {showData ? (
           <>
-            <RLayer
-              id="vic"
-              source="protomaps"
-              source-layer="NV2005_EVCBCS_subset"
-              type="fill"
-              paint={{
-                "fill-color": [
-                  "match",
-                  ["get", "Group"],
-                  "Herb-rich Woodlands",
-                  "#3B243C",
-                  "Plains Grasslands and Chenopod Shrublands",
-                  "#2B3313",
-                  "Riverine Grassy Woodlands or Forests",
-                  "#262C48",
-                  "Mallee",
-                  "#083441",
-                  "Lower Slopes or Hills Woodlands",
-                  "#3F290E",
-                  "Dry Forests",
-                  "#0C372C",
-                  "#442324",
-                ],
-                "fill-opacity": 0.2,
-              }}
-              onMouseMove={(e) => {
-                if (tooltipTimeout) {
-                  clearTimeout(tooltipTimeout);
-                }
-
-                if (popupInfo) return;
-
-                if (e.features && e.features.length > 0) {
-                  const topFeature = e.features[0];
-                  const timeout = setTimeout(() => {
-                    if (popupInfo) return;
-                    setTooltipInfo({
-                      longitude: e.lngLat.lng,
-                      latitude: e.lngLat.lat,
-                      properties: { EVC: topFeature.properties.EVC_name },
-                    });
-                  }, 500);
-                  setTooltipTimeout(timeout);
-                } else {
-                  setTooltipInfo(null);
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (tooltipTimeout) {
-                  clearTimeout(tooltipTimeout);
-                }
-                setTooltipInfo(null);
-              }}
-            />
+            <TooltipLayer popupInfo={popupInfo} />
             {data.birdData.map((station) => {
               const speciesCount = station.speciesData?.total || 0;
 
@@ -344,21 +275,6 @@ function Map({ data }: { data: MapData }) {
             </button>
           </RPopup>
         )}
-        {tooltipInfo && (
-          <RPopup
-            className="inverted-tooltip"
-            longitude={tooltipInfo.longitude}
-            latitude={tooltipInfo.latitude}
-            onMapMove={() => setTooltipInfo(null)}
-          >
-            <div className="px-1 text-xs">
-              <p>
-                <span className="font-semibold">EVC:</span>{" "}
-                {String(tooltipInfo.properties.EVC)}
-              </p>
-            </div>
-          </RPopup>
-        )}
       </RMap>
       <div className="absolute left-4 top-4 bg-black px-2 py-0 rounded-xl">
         <button onClick={() => setShowData((r) => !r)}>
@@ -370,3 +286,4 @@ function Map({ data }: { data: MapData }) {
 }
 
 export default Map;
+
