@@ -151,38 +151,64 @@ function RDraw(props: RDrawProps) {
   );
 
   useEffect(() => {
-    map.addControl(draw as any);
+    const initDraw = () => {
+      map.addControl(draw as any);
 
-    const mapCanvas = map.getCanvas();
+      const mapCanvas = map.getCanvas();
 
-    const onModeChange = (e: any) => {
-      if (
-        e.mode === "draw_polygon" ||
-        e.mode === "draw_line_string" ||
-        e.mode === "draw_point"
-      ) {
-        mapCanvas.style.cursor = "crosshair";
-      } else {
+      const onModeChange = (e: any) => {
+        if (
+          e.mode === "draw_polygon" ||
+          e.mode === "draw_line_string" ||
+          e.mode === "draw_point"
+        ) {
+          mapCanvas.style.cursor = "crosshair";
+        } else {
+          mapCanvas.style.cursor = "";
+        }
+      };
+
+      map.on("draw.modechange", onModeChange);
+      map.on("draw.create", (e: any) => {
+        props.onCreate(e.features);
+      });
+      map.on("draw.update", (e: any) => {
+        props.onUpdate(e.features);
+      });
+      map.on("draw.delete", (e: any) => {
+        props.onDelete(e.features);
+      });
+
+      return () => {
+        map.off("draw.modechange", onModeChange);
         mapCanvas.style.cursor = "";
-      }
+        map.removeControl(draw);
+      };
     };
 
-    map.on("draw.modechange", onModeChange);
-    map.on("draw.create", (e: any) => {
-      props.onCreate(e.features);
-    });
-    map.on("draw.update", (e: any) => {
-      props.onUpdate(e.features);
-    });
-    map.on("draw.delete", (e: any) => {
-      props.onDelete(e.features);
-    });
-    return () => {
-      map.off("draw.modechange", onModeChange);
-      mapCanvas.style.cursor = "";
-      map.removeControl(draw);
-    };
-  }, []);
+    if (map.isStyleLoaded()) {
+      const cleanup = initDraw();
+      return cleanup;
+    } else {
+      const onStyleLoad = () => {
+        const cleanup = initDraw();
+        map.off("style.load", onStyleLoad);
+        // This cleanup is tricky, as it's not directly returned by useEffect
+        // but we can rely on the component unmount to do the main cleanup.
+      };
+      map.on("style.load", onStyleLoad);
+
+      return () => {
+        map.off("style.load", onStyleLoad);
+        // Ensure control is removed if component unmounts before style loads
+        try {
+          map.removeControl(draw);
+        } catch (e) {
+          // Ignore error if control was not added
+        }
+      };
+    }
+  }, [map, draw, props]);
 
   return null;
 }

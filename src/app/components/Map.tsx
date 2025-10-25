@@ -79,7 +79,10 @@ function Map({ data }: { data: MapData }) {
   };
 
   return (
-    <div className="w-full h-screen" style={{ position: "relative", zIndex: 0 }}>
+    <div
+      className="w-full h-screen"
+      style={{ position: "relative", zIndex: 0 }}
+    >
       <RMap
         initialCenter={[142.5, -37]}
         initialZoom={10}
@@ -140,109 +143,121 @@ function Map({ data }: { data: MapData }) {
           onDelete={useCallback((e) => console.log("onDelete", e), [])}
         />
         <RNavigationControl />
-        {showData ? (
-          <>
-            <TooltipLayer popupInfo={popupInfo} />
-            {data.birdData.map((station) => {
-              const speciesCount = station.speciesData?.total || 0;
+        <RSource
+          id="inaturalist-source"
+          type="raster"
+          tiles={[
+            "https://api.inaturalist.org/v1/points/{z}/{x}/{y}.png?taxon_id=54686&geoprivacy=open&taxon_geoprivacy=open&obscuration=none",
+          ]}
+          tileSize={256}
+        />
+        <RLayer
+          id="inaturalist-layer"
+          type="raster"
+          source="inaturalist-source"
+          paint={{ "raster-opacity": 0.7 }}
+        />
+        <TooltipLayer popupInfo={popupInfo} />
+        <>
+          <TooltipLayer popupInfo={popupInfo} />
+          {data.birdData.map((station) => {
+            const speciesCount = station.speciesData?.total || 0;
 
-              return (
-                <RMarker
-                  key={station.id}
-                  longitude={station.coords.lon}
-                  latitude={station.coords.lat}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPopupInfo({
-                      longitude: station.coords.lon,
-                      latitude: station.coords.lat,
-                      properties: {
-                        total_birds: station?.speciesData?.total
-                          ? station?.speciesData.total
-                          : null,
-                      },
-                    });
-                  }}
-                >
-                  <PucMarker
-                    speciesCount={speciesCount}
-                    baseColor="#3B243C"
-                    upper={maxSpeciesTotals}
-                  />
-                </RMarker>
-              );
-            })}
-            {data.squirrel_glider_data.map((point) => (
+            return (
               <RMarker
-                key={point.observation_id}
-                longitude={point._longitude}
-                latitude={point._latitude}
+                key={station.id}
+                longitude={station.coords.lon}
+                latitude={station.coords.lat}
                 onClick={(e) => {
                   e.stopPropagation();
                   setPopupInfo({
-                    longitude: point._longitude,
-                    latitude: point._latitude,
-                    properties: point,
+                    longitude: station.coords.lon,
+                    latitude: station.coords.lat,
+                    properties: {
+                      total_birds: station?.speciesData?.total
+                        ? station?.speciesData.total
+                        : null,
+                    },
                   });
                 }}
               >
-                <CustomMarker />
+                <PucMarker
+                  speciesCount={speciesCount}
+                  baseColor="#3B243C"
+                  upper={maxSpeciesTotals}
+                />
               </RMarker>
-            ))}
-            <RSource id="transects" type="geojson" data={transectFeatures} />
-            <RLayer
-              id="transects-fill"
-              source="transects"
-              type="fill"
-              paint={{
-                "fill-color": "#FED0D1",
-                "fill-opacity": 0.5,
-              }}
-            />
-            <RLayer
-              id="transects-line"
-              source="transects"
-              type="line"
-              paint={{
-                "line-color": "#FED0D1",
-                "line-width": 2,
-                "line-opacity": 0.5,
-              }}
-            />
-            <RSource
-              id="historical-sites"
-              type="geojson"
-              data={historicalDataFeatures}
-            />
-            <RLayer
-              id="historical-sites-fill"
-              source="historical-sites"
-              type="fill"
-              paint={{
-                "fill-color": "#96bb0644",
-              }}
+            );
+          })}
+          {data.squirrel_glider_data.map((point) => (
+            <RMarker
+              key={point.observation_id}
+              longitude={point._longitude}
+              latitude={point._latitude}
               onClick={(e) => {
+                e.stopPropagation();
                 setPopupInfo({
-                  longitude: e.lngLat.lng,
-                  latitude: e.lngLat.lat,
-                  properties: e.features ? e.features[0].properties : null,
+                  longitude: point._longitude,
+                  latitude: point._latitude,
+                  properties: point,
                 });
-                console.log(e.features && e.features[0].properties);
               }}
-            />
-            <RLayer
-              id="historical-sites-line"
-              source="historical-sites"
-              type="line"
-              paint={{
-                "line-color": "#96bb06",
-                "line-width": 2,
-              }}
-            />
-          </>
-        ) : (
-          ""
-        )}
+            >
+              <CustomMarker />
+            </RMarker>
+          ))}
+          <RSource id="transects" type="geojson" data={transectFeatures} />
+          <RLayer
+            id="transects-fill"
+            source="transects"
+            type="fill"
+            paint={{
+              "fill-color": "#FED0D1",
+              "fill-opacity": 0.5,
+            }}
+          />
+          <RLayer
+            id="transects-line"
+            source="transects"
+            type="line"
+            paint={{
+              "line-color": "#FED0D1",
+              "line-width": 2,
+              "line-opacity": 0.5,
+            }}
+          />
+          <RSource
+            id="historical-sites"
+            type="geojson"
+            data={historicalDataFeatures}
+          />
+          <RLayer
+            id="historical-sites-fill"
+            source="historical-sites"
+            type="fill"
+            paint={{
+              "fill-color": "#96bb0644",
+            }}
+            onClick={(e) => {
+              setPopupInfo({
+                longitude: e.lngLat.lng,
+                latitude: e.lngLat.lat,
+                properties: e.features ? e.features[0].properties : null,
+              });
+              console.log(e.features && e.features[0].properties);
+            }}
+          />
+          <RLayer
+            id="historical-sites-line"
+            source="historical-sites"
+            type="line"
+            paint={{
+              "line-color": "#96bb06",
+              "line-width": 2,
+            }}
+          />
+        </>
+
         {popupInfo && (
           <RPopup
             className="text-black"
@@ -286,4 +301,3 @@ function Map({ data }: { data: MapData }) {
 }
 
 export default Map;
-
