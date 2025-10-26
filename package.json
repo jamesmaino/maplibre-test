@@ -29,8 +29,5 @@
     "eslint-config-next": "15.5.4",
     "tailwindcss": "^4",
     "typescript": "^5"
-  },
-  "overrides": {
-    "maplibre-gl": "^5.9.0"
   }
 }

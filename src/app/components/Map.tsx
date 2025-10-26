@@ -61,7 +61,7 @@ function Map({ data }: { data: MapData }) {
   }, []);
 
   const [showProtomaps, setShowProtomaps] = useState(true);
-  const [showFeeds, setShowFeeds] = useState(true);
+  const [showFeeds, setShowFeeds] = useState(false);
   const [showGroupData, setShowGroupData] = useState(true);
 
   const hasGroupData =

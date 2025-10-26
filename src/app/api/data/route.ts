@@ -1,5 +1,7 @@
 
 import { NextResponse } from 'next/server'
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 import { MapData, Observation, Transect, HistoricalData, BirdData } from "../../../types/data";
 
 async function getData(url: string) {
@@ -59,62 +61,72 @@ interface Station {
 }
 
 export async function GET() {
-  const historicalSitesQuery = `
-    SELECT
-        *
-    FROM
-        "LOOKUP TABLE Long Term Sites Jallukar LCG"
-  `;
-  // color code by site_type
-  // popup: show all other variables
+  const session = await getServerSession(authOptions)
 
-  const squirrelGliderQuery = `
-    SELECT
-        _child_record_id AS observation_id,
-        _parent_id AS parent_record_id,
-        common_name,
-        scientific_name,
-        number_of_individuals,
-        behaviour_notes,
-        _latitude,
-        _longitude,
-        _geometry
-    FROM
-        "Project Platypus field crew logging/animals_observed"
-    WHERE
-        common_name = 'Squirrel Glider '
-    ORDER BY
-        _parent_id;
-  `;
+  if (!session) {
+    return new NextResponse("Unauthorized", { status: 401 })
+  }
 
-  const transectQuery = `
-    SELECT
-        *
-    FROM
-        "Project Platypus field crew logging"
-    WHERE
-        'Glider survey' = ANY(activity_type)
-        AND is_this_a_day_or_night_survey = 'night'
-        AND is_this_a_day_or_night_survey IS NOT NULL
-  `;
+  let squirrel_glider_data: Observation[] = [];
+  let transect_data: Transect[] = [];
+  let historical_data: HistoricalData[] = [];
 
-  const baseUrl = "https://api.fulcrumapp.com/api/v2/query";
-  const params =
-    "format=json&headers=true&metadata=false&arrays=false&page=1&per_page=20000";
+  if (session.user?.group === "admin") {
+    const historicalSitesQuery = `
+      SELECT
+          *
+      FROM
+          "LOOKUP TABLE Long Term Sites Jallukar LCG"
+    `;
 
-  const squirrel_glider_url = `${baseUrl}?q=${encodeURIComponent(
-    squirrelGliderQuery
-  )}&${params}`;
-  const transect_url = `${baseUrl}?q=${encodeURIComponent(
-    transectQuery
-  )}&${params}`;
-  const historical_url = `${baseUrl}?q=${encodeURIComponent(
-    historicalSitesQuery
-  )}&${params}`;
+    const squirrelGliderQuery = `
+      SELECT
+          _child_record_id AS observation_id,
+          _parent_id AS parent_record_id,
+          common_name,
+          scientific_name,
+          number_of_individuals,
+          behaviour_notes,
+          _latitude,
+          _longitude,
+          _geometry
+      FROM
+          "Project Platypus field crew logging/animals_observed"
+      WHERE
+          common_name = 'Squirrel Glider '
+      ORDER BY
+          _parent_id;
+    `;
 
-  const squirrel_glider_data: Observation[] = await getData(squirrel_glider_url);
-  const transect_data: Transect[] = await getData(transect_url);
-  const historical_data: HistoricalData[] = await getData(historical_url);
+    const transectQuery = `
+      SELECT
+          *
+      FROM
+          "Project Platypus field crew logging"
+      WHERE
+          'Glider survey' = ANY(activity_type)
+          AND is_this_a_day_or_night_survey = 'night'
+          AND is_this_a_day_or_night_survey IS NOT NULL
+    `;
+
+    const baseUrl = "https://api.fulcrumapp.com/api/v2/query";
+    const params =
+      "format=json&headers=true&metadata=false&arrays=false&page=1&per_page=20000";
+
+    const squirrel_glider_url = `${baseUrl}?q=${encodeURIComponent(
+      squirrelGliderQuery
+    )}&${params}`;
+    const transect_url = `${baseUrl}?q=${encodeURIComponent(
+      transectQuery
+    )}&${params}`;
+    const historical_url = `${baseUrl}?q=${encodeURIComponent(
+      historicalSitesQuery
+    )}&${params}`;
+
+    squirrel_glider_data = await getData(squirrel_glider_url);
+    transect_data = await getData(transect_url);
+    historical_data = await getData(historical_url);
+  }
 
   const stationsQuery = `
     query StationsInBox(
