@@ -61,7 +61,7 @@ function Map({ data }: { data: MapData }) {
   }, []);
 
   const [showProtomaps, setShowProtomaps] = useState(true);
-  const [showDevices, setShowDevices] = useState(true);
+  const [showFeeds, setShowFeeds] = useState(true);
   const [showGroupData, setShowGroupData] = useState(true);
 
   const hasGroupData =
@@ -76,9 +76,9 @@ function Map({ data }: { data: MapData }) {
       text: "Vegetation",
     },
     {
-      state: showDevices,
-      onClick: () => setShowDevices((r) => !r),
-      text: "Devices",
+      state: showFeeds,
+      onClick: () => setShowFeeds((r) => !r),
+      text: "Feeds",
     },
     {
       state: showGroupData,
@@ -106,7 +106,10 @@ function Map({ data }: { data: MapData }) {
   };
 
   return (
-    <div className="w-full h-screen" style={{ position: "relative", zIndex: 0 }}>
+    <div
+      className="w-full h-screen"
+      style={{ position: "relative", zIndex: 0 }}
+    >
       <RMap
         initialCenter={[142.5, -37]}
         initialZoom={10}
@@ -171,10 +174,23 @@ function Map({ data }: { data: MapData }) {
           line_width={Colors.line_width}
         />
         <RNavigationControl />
+        <RSource
+          id="inaturalist-source"
+          type="raster"
+          tiles={[
+            "https://api.inaturalist.org/v1/points/{z}/{x}/{y}.png?taxon_id=54686&geoprivacy=open&taxon_geoprivacy=open&obscuration=none",
+          ]}
+          tileSize={256}
+        />
         {showProtomaps && <TooltipLayer popupInfo={popupInfo} />}
-
-        {showDevices ? (
+        {showFeeds ? (
           <>
+            <RLayer
+              id="inaturalist-layer"
+              type="raster"
+              source="inaturalist-source"
+              paint={{ "raster-opacity": 0.7 }}
+            />
             {data.birdData.map((station) => {
               const speciesCount = station.speciesData?.total || 0;
 
@@ -295,6 +311,7 @@ function Map({ data }: { data: MapData }) {
         ) : (
           ""
         )}
+
         {popupInfo && (
           <RPopup
             className="text-black"

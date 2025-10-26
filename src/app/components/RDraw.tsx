@@ -50,7 +50,11 @@ function RDraw(props: RDrawProps) {
           {
             id: "gl-draw-polygon-fill",
             type: "fill",
-            filter: ["all", ["==", "$type", "Polygon"], ["!=", "mode", "static"]],
+            filter: [
+              "all",
+              ["==", "$type", "Polygon"],
+              ["!=", "mode", "static"],
+            ],
             paint: {
               "fill-color": props.color,
               "fill-outline-color": props.color,
@@ -60,7 +64,11 @@ function RDraw(props: RDrawProps) {
           {
             id: "gl-draw-polygon-stroke-active",
             type: "line",
-            filter: ["all", ["==", "$type", "Polygon"], ["!=", "mode", "static"]],
+            filter: [
+              "all",
+              ["==", "$type", "Polygon"],
+              ["!=", "mode", "static"],
+            ],
             layout: {
               "line-cap": "round",
               "line-join": "round",
@@ -130,7 +138,11 @@ function RDraw(props: RDrawProps) {
           {
             id: "gl-draw-polygon-fill-static",
             type: "fill",
-            filter: ["all", ["==", "$type", "Polygon"], ["==", "mode", "static"]],
+            filter: [
+              "all",
+              ["==", "$type", "Polygon"],
+              ["==", "mode", "static"],
+            ],
             paint: {
               "fill-color": "#000",
               "fill-outline-color": "#000",
@@ -140,7 +152,11 @@ function RDraw(props: RDrawProps) {
           {
             id: "gl-draw-polygon-stroke-static",
             type: "line",
-            filter: ["all", ["==", "$type", "Polygon"], ["==", "mode", "static"]],
+            filter: [
+              "all",
+              ["==", "$type", "Polygon"],
+              ["==", "mode", "static"],
+            ],
             layout: {
               "line-cap": "round",
               "line-join": "round",
