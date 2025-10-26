@@ -2,7 +2,7 @@
 
 import CustomMarker from "./CustomMarker";
 import PucMarker from "./PucMarker";
-import { MapData } from "./ClientMap";
+import { MapData } from "../../types/data";
 import { useState, useEffect, useCallback } from "react";
 import { Protocol } from "pmtiles";
 import maplibregl, { MapLayerMouseEvent } from "maplibre-gl";
@@ -61,7 +61,7 @@ function Map({ data }: { data: MapData }) {
   }, []);
 
   const [showProtomaps, setShowProtomaps] = useState(true);
-  const [showFeeds, setShowFeeds] = useState(true);
+  const [showFeeds, setShowFeeds] = useState(false);
   const [showGroupData, setShowGroupData] = useState(true);
 
   const hasGroupData =
@@ -122,7 +122,7 @@ function Map({ data }: { data: MapData }) {
               tiles: ["https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"],
               tileSize: 256,
               attribution: "&copy; OpenStreetMap Contributors",
-              maxzoom: 15,
+              maxzoom: 25,
             },
             protomaps: {
               type: "vector",
@@ -144,8 +144,8 @@ function Map({ data }: { data: MapData }) {
               source: "osm",
               paint: {
                 "raster-saturation": -1.0,
-                "raster-contrast": -0.2,
-                "raster-brightness-min": 0.1,
+                "raster-contrast": -0.1,
+                "raster-brightness-min": 0.4,
                 "raster-brightness-max": 0.9,
               },
             },
