@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { RLayer, RPopup } from "maplibre-react-components";
 import { MapLayerMouseEvent } from "maplibre-gl";
+import * as Colors from './Colors';
 
 function TooltipLayer({ popupInfo }: { popupInfo: any }) {
   const [tooltipInfo, setTooltipInfo] = useState<{
@@ -34,21 +35,18 @@ function TooltipLayer({ popupInfo }: { popupInfo: any }) {
           "fill-color": [
             "match",
             ["get", "Group"],
-            "Herb-rich Woodlands",
-            "#3B243C",
-            "Plains Grasslands and Chenopod Shrublands",
-            "#2B3313",
-            "Riverine Grassy Woodlands or Forests",
-            "#262C48",
-            "Mallee",
-            "#083441",
-            "Lower Slopes or Hills Woodlands",
-            "#3F290E",
-            "Dry Forests",
-            "#0C372C",
-            "#442324",
+            "Wet or Damp Forests", Colors.background1,
+            "Riparian Scrubs or Swampy Scrubs and Woodlands", Colors.background2,
+            "Herb-rich Woodlands", Colors.background3,
+            "Plains Grasslands and Chenopod Shrublands", Colors.background4,
+            "Riverine Grassy Woodlands or Forests", Colors.background5,
+            "Mallee", Colors.background6,
+            "Lower Slopes or Hills Woodlands", Colors.background7,
+            "Dry Forests", Colors.background8,
+            "Plains Woodlands or Forests", Colors.background9,
+            Colors.background10
           ],
-          "fill-opacity": 0.2,
+          "fill-opacity": Colors.background_opacity,
         }}
         onMouseMove={(e: MapLayerMouseEvent) => {
           if (tooltipTimeout) {

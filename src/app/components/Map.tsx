@@ -6,6 +6,7 @@ import { MapData } from "./ClientMap";
 import { useState, useEffect, useCallback } from "react";
 import { Protocol } from "pmtiles";
 import maplibregl, { MapLayerMouseEvent } from "maplibre-gl";
+import * as Colors from "./Colors";
 
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
@@ -59,7 +60,33 @@ function Map({ data }: { data: MapData }) {
     };
   }, []);
 
-  const [showData, setShowData] = useState(true);
+  const [showProtomaps, setShowProtomaps] = useState(true);
+  const [showDevices, setShowDevices] = useState(true);
+  const [showGroupData, setShowGroupData] = useState(true);
+
+  const hasGroupData =
+    data.squirrel_glider_data.length > 0 ||
+    data.transect_data.length > 0 ||
+    data.historical_data.length > 0;
+
+  const buttonConfigs = [
+    {
+      state: showProtomaps,
+      onClick: () => setShowProtomaps((r) => !r),
+      text: "Vegetation",
+    },
+    {
+      state: showDevices,
+      onClick: () => setShowDevices((r) => !r),
+      text: "Devices",
+    },
+    {
+      state: showGroupData,
+      onClick: () => setShowGroupData((r) => !r),
+      text: "Group Data",
+      hidden: !hasGroupData,
+    },
+  ];
 
   const maxSpeciesTotals =
     Math.max(
@@ -127,7 +154,7 @@ function Map({ data }: { data: MapData }) {
               paint: {
                 "line-color": "#333333",
                 "line-opacity": 0.5,
-                "line-width": 2.5,
+                "line-width": Colors.line_width,
               },
             },
           ],
@@ -135,14 +162,19 @@ function Map({ data }: { data: MapData }) {
         onClick={handleMapClick}
       >
         <RDraw
-          onCreate={useCallback((e) => console.log("onCreate", e), [])}
-          onUpdate={useCallback((e) => console.log("onUpdate", e), [])}
-          onDelete={useCallback((e) => console.log("onDelete", e), [])}
+          onCreate={(e) => console.log("onCreate", e)}
+          onUpdate={(e) => console.log("onUpdate", e)}
+          onDelete={(e) => console.log("onDelete", e)}
+          color={Colors.normal6}
+          opacity={Colors.foreground_opacity}
+          fill_opacity={Colors.foreground_fill_opacity}
+          line_width={Colors.line_width}
         />
         <RNavigationControl />
-        {showData ? (
+        {showProtomaps && <TooltipLayer popupInfo={popupInfo} />}
+
+        {showDevices ? (
           <>
-            <TooltipLayer popupInfo={popupInfo} />
             {data.birdData.map((station) => {
               const speciesCount = station.speciesData?.total || 0;
 
@@ -166,12 +198,19 @@ function Map({ data }: { data: MapData }) {
                 >
                   <PucMarker
                     speciesCount={speciesCount}
-                    baseColor="#3B243C"
+                    baseColor={Colors.foreground4}
+                    opacity={Colors.foreground_opacity}
                     upper={maxSpeciesTotals}
                   />
                 </RMarker>
               );
             })}
+          </>
+        ) : (
+          ""
+        )}
+        {showGroupData ? (
+          <>
             {data.squirrel_glider_data.map((point) => (
               <RMarker
                 key={point.observation_id}
@@ -186,7 +225,10 @@ function Map({ data }: { data: MapData }) {
                   });
                 }}
               >
-                <CustomMarker />
+                <CustomMarker
+                  baseColor={Colors.normal2}
+                  opacity={Colors.foreground_opacity}
+                />
               </RMarker>
             ))}
             <RSource id="transects" type="geojson" data={transectFeatures} />
@@ -195,18 +237,22 @@ function Map({ data }: { data: MapData }) {
               source="transects"
               type="fill"
               paint={{
-                "fill-color": "#FED0D1",
-                "fill-opacity": 0.5,
+                "fill-color": Colors.normal2,
+                "fill-opacity": Colors.foreground_fill_opacity,
               }}
+              onMouseEnter={(e) =>
+                (e.target.getCanvas().style.cursor = "pointer")
+              }
+              onMouseLeave={(e) => (e.target.getCanvas().style.cursor = "")}
             />
             <RLayer
               id="transects-line"
               source="transects"
               type="line"
               paint={{
-                "line-color": "#FED0D1",
-                "line-width": 2,
-                "line-opacity": 0.5,
+                "line-color": Colors.foreground2,
+                "line-width": Colors.line_width,
+                "line-opacity": Colors.foreground_opacity,
               }}
             />
             <RSource
@@ -219,7 +265,8 @@ function Map({ data }: { data: MapData }) {
               source="historical-sites"
               type="fill"
               paint={{
-                "fill-color": "#96bb0644",
+                "fill-color": Colors.foreground8,
+                "fill-opacity": Colors.foreground_fill_opacity,
               }}
               onClick={(e) => {
                 setPopupInfo({
@@ -229,14 +276,19 @@ function Map({ data }: { data: MapData }) {
                 });
                 console.log(e.features && e.features[0].properties);
               }}
+              onMouseEnter={(e) =>
+                (e.target.getCanvas().style.cursor = "pointer")
+              }
+              onMouseLeave={(e) => (e.target.getCanvas().style.cursor = "")}
             />
             <RLayer
               id="historical-sites-line"
               source="historical-sites"
               type="line"
               paint={{
-                "line-color": "#96bb06",
-                "line-width": 2,
+                "line-color": Colors.foreground8,
+                "line-width": Colors.line_width,
+                "line-opacity": Colors.foreground_opacity,
               }}
             />
           </>
@@ -262,13 +314,15 @@ function Map({ data }: { data: MapData }) {
                 // Map the filtered entries to your JSX elements
                 .map(([key, value]) => (
                   <p key={key} className="text-slate-600">
-                    <span className="font-semibold">{key}:</span>{" "}
+                    <span className="font-semibold">
+                      {key.replaceAll("_", " ")}:
+                    </span>{" "}
                     {String(value)}
                   </p>
                 ))}
             </div>
             <button
-              className="w-4 h-4 text-lg maplibregl-popup-close-button"
+              className=" maplibregl-popup-close-button flex items-center text-lg py-1 px-2"
               onClick={() => setPopupInfo(null)}
             >
               ×
@@ -276,14 +330,26 @@ function Map({ data }: { data: MapData }) {
           </RPopup>
         )}
       </RMap>
-      <div className="absolute left-4 top-4 bg-black px-2 py-0 rounded-xl">
-        <button onClick={() => setShowData((r) => !r)}>
-          {showData ? "hide layers" : "show layers"}
-        </button>
+      <div className="absolute left-4 top-4 flex flex-col space-y-2">
+        {buttonConfigs.map(
+          (config, index) =>
+            !config.hidden && (
+              <button
+                key={index}
+                onClick={config.onClick}
+                className={`px-2 py-1 rounded-md text-sm font-medium ${
+                  config.state
+                    ? "bg-gray-600 text-white hover:bg-gray-700"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                {config.state ? `${config.text} On` : `${config.text} Off`}
+              </button>
+            )
+        )}
       </div>
     </div>
   );
 }
 
 export default Map;
-
