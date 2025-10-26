@@ -2,7 +2,7 @@
 
 import CustomMarker from "./CustomMarker";
 import PucMarker from "./PucMarker";
-import { MapData } from "./ClientMap";
+import { MapData } from "@/types/data";
 import { useState, useEffect, useCallback } from "react";
 import { Protocol } from "pmtiles";
 import maplibregl, { MapLayerMouseEvent } from "maplibre-gl";
