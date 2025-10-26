@@ -36,3 +36,8 @@ export const foreground10 = "#A4F3BF"
 export const lightgrey = "#CCCCCC"
 export const normalgrey = "#999999"
 export const darkgrey = "#222222"
+
+export const foreground_opacity = 0.8;
+export const foreground_fill_opacity = 0.3;
+export const background_opacity = 0.1;
+export const line_width = 2.5;

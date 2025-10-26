@@ -105,11 +105,6 @@ function Map({ data }: { data: MapData }) {
     }
   };
 
-  const foreground_opacity = 0.8;
-  const foreground_fill_opacity = 0.3;
-  const background_opacity = 0.1;
-  const line_width = 2.5;
-
   return (
     <div className="w-full h-screen" style={{ position: "relative", zIndex: 0 }}>
       <RMap
@@ -159,7 +154,7 @@ function Map({ data }: { data: MapData }) {
               paint: {
                 "line-color": "#333333",
                 "line-opacity": 0.5,
-                "line-width": line_width,
+                "line-width": Colors.line_width,
               },
             },
           ],
@@ -171,9 +166,9 @@ function Map({ data }: { data: MapData }) {
           onUpdate={(e) => console.log("onUpdate", e)}
           onDelete={(e) => console.log("onDelete", e)}
           color={Colors.normal6}
-          opacity={foreground_opacity}
-          fill_opacity={foreground_fill_opacity}
-          line_width={line_width}
+          opacity={Colors.foreground_opacity}
+          fill_opacity={Colors.foreground_fill_opacity}
+          line_width={Colors.line_width}
         />
         <RNavigationControl />
         {showProtomaps && <TooltipLayer popupInfo={popupInfo} />}
@@ -204,7 +199,7 @@ function Map({ data }: { data: MapData }) {
                   <PucMarker
                     speciesCount={speciesCount}
                     baseColor={Colors.foreground4}
-                    opacity={foreground_opacity}
+                    opacity={Colors.foreground_opacity}
                     upper={maxSpeciesTotals}
                   />
                 </RMarker>
@@ -232,7 +227,7 @@ function Map({ data }: { data: MapData }) {
               >
                 <CustomMarker
                   baseColor={Colors.normal2}
-                  opacity={foreground_opacity}
+                  opacity={Colors.foreground_opacity}
                 />
               </RMarker>
             ))}
@@ -243,7 +238,7 @@ function Map({ data }: { data: MapData }) {
               type="fill"
               paint={{
                 "fill-color": Colors.normal2,
-                "fill-opacity": foreground_fill_opacity,
+                "fill-opacity": Colors.foreground_fill_opacity,
               }}
               onMouseEnter={(e) =>
                 (e.target.getCanvas().style.cursor = "pointer")
@@ -256,8 +251,8 @@ function Map({ data }: { data: MapData }) {
               type="line"
               paint={{
                 "line-color": Colors.foreground2,
-                "line-width": line_width,
-                "line-opacity": foreground_opacity,
+                "line-width": Colors.line_width,
+                "line-opacity": Colors.foreground_opacity,
               }}
             />
             <RSource
@@ -271,7 +266,7 @@ function Map({ data }: { data: MapData }) {
               type="fill"
               paint={{
                 "fill-color": Colors.foreground8,
-                "fill-opacity": foreground_fill_opacity,
+                "fill-opacity": Colors.foreground_fill_opacity,
               }}
               onClick={(e) => {
                 setPopupInfo({
@@ -292,8 +287,8 @@ function Map({ data }: { data: MapData }) {
               type="line"
               paint={{
                 "line-color": Colors.foreground8,
-                "line-width": line_width,
-                "line-opacity": foreground_opacity,
+                "line-width": Colors.line_width,
+                "line-opacity": Colors.foreground_opacity,
               }}
             />
           </>
@@ -319,7 +314,9 @@ function Map({ data }: { data: MapData }) {
                 // Map the filtered entries to your JSX elements
                 .map(([key, value]) => (
                   <p key={key} className="text-slate-600">
-                    <span className="font-semibold">{key}:</span>{" "}
+                    <span className="font-semibold">
+                      {key.replaceAll("_", " ")}:
+                    </span>{" "}
                     {String(value)}
                   </p>
                 ))}
