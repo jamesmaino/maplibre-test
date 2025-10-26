@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server'
-import { MapData, Observation, Transect, HistoricalData, BirdData } from "@/types/data";
+import { MapData, Observation, Transect, HistoricalData, BirdData } from "../../../types/data";
 
 async function getData(url: string) {
   const options = {

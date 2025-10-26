@@ -1,13 +1,13 @@
 
-import NextAuth, { type User } from "next-auth"
+import NextAuth, { type NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 
-const handler = NextAuth({
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        username: { label: "Username", type: "text", placeholder: "jsmith" },
+        username: { label: "Username", type: "text", placeholder: "user1" },
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
@@ -29,7 +29,7 @@ const handler = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.group = (user as any).group
+        token.group = user.group
       }
       return token
     },
@@ -38,6 +38,8 @@ const handler = NextAuth({
       return session
     }
   }
-})
+}
+
+const handler = NextAuth(authOptions)
 
 export { handler as GET, handler as POST }

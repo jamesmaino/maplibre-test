@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "maplibre-gl": "^5.7.3",
+    "maplibre-gl": "^5.9.0",
     "maplibre-gl-draw": "^1.6.9",
     "maplibre-react-components": "^0.2.6",
     "next": "15.5.4",
@@ -29,5 +29,8 @@
     "eslint-config-next": "15.5.4",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "maplibre-gl": "^5.9.0"
   }
 }
