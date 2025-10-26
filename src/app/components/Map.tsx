@@ -61,7 +61,7 @@ function Map({ data }: { data: MapData }) {
   }, []);
 
   const [showProtomaps, setShowProtomaps] = useState(true);
-  const [showDevices, setShowDevices] = useState(true);
+  const [showFeeds, setShowFeeds] = useState(true);
   const [showGroupData, setShowGroupData] = useState(true);
 
   const hasGroupData =
@@ -76,9 +76,9 @@ function Map({ data }: { data: MapData }) {
       text: "Vegetation",
     },
     {
-      state: showDevices,
-      onClick: () => setShowDevices((r) => !r),
-      text: "Devices",
+      state: showFeeds,
+      onClick: () => setShowFeeds((r) => !r),
+      text: "Feeds",
     },
     {
       state: showGroupData,
@@ -174,8 +174,6 @@ function Map({ data }: { data: MapData }) {
           line_width={Colors.line_width}
         />
         <RNavigationControl />
-        {showProtomaps && <TooltipLayer popupInfo={popupInfo} />}
-        {showDevices ? (
         <RSource
           id="inaturalist-source"
           type="raster"
@@ -184,13 +182,15 @@ function Map({ data }: { data: MapData }) {
           ]}
           tileSize={256}
         />
-        <RLayer
-          id="inaturalist-layer"
-          type="raster"
-          source="inaturalist-source"
-          paint={{ "raster-opacity": 0.7 }}
-        />
+        {showProtomaps && <TooltipLayer popupInfo={popupInfo} />}
+        {showFeeds ? (
           <>
+            <RLayer
+              id="inaturalist-layer"
+              type="raster"
+              source="inaturalist-source"
+              paint={{ "raster-opacity": 0.7 }}
+            />
             {data.birdData.map((station) => {
               const speciesCount = station.speciesData?.total || 0;
 
