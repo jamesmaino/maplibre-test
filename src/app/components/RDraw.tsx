@@ -9,6 +9,10 @@ interface RDrawProps {
   onCreate: (features: Feature[]) => void;
   onUpdate: (features: Feature[]) => void;
   onDelete: (features: Feature[]) => void;
+  color?: string;
+  opacity?: number;
+  fill_opacity?: number;
+  line_width?: number;
 }
 
 function RDraw(props: RDrawProps) {
@@ -38,9 +42,9 @@ function RDraw(props: RDrawProps) {
               "line-join": "round",
             },
             paint: {
-              "line-color": "#D20C0C",
-              "line-dasharray": [0.2, 2],
-              "line-width": 2,
+              "line-color": props.color,
+              "line-dasharray": [0.3, 4],
+              "line-width": props.line_width,
             },
           },
           {
@@ -48,9 +52,9 @@ function RDraw(props: RDrawProps) {
             type: "fill",
             filter: ["all", ["==", "$type", "Polygon"], ["!=", "mode", "static"]],
             paint: {
-              "fill-color": "#D20C0C",
-              "fill-outline-color": "#D20C0C",
-              "fill-opacity": 0.1,
+              "fill-color": props.color,
+              "fill-outline-color": props.color,
+              "fill-opacity": props.fill_opacity,
             },
           },
           {
@@ -62,9 +66,9 @@ function RDraw(props: RDrawProps) {
               "line-join": "round",
             },
             paint: {
-              "line-color": "#D20C0C",
-              "line-dasharray": [0.2, 2],
-              "line-width": 2,
+              "line-color": props.color,
+              "line-dasharray": [0.3, 4],
+              "line-width": props.line_width,
             },
           },
           {
@@ -92,7 +96,7 @@ function RDraw(props: RDrawProps) {
             ],
             paint: {
               "circle-radius": 3,
-              "circle-color": "#D20C0C",
+              "circle-color": props.color,
             },
           },
           {
@@ -101,7 +105,7 @@ function RDraw(props: RDrawProps) {
             filter: ["all", ["==", "$type", "Point"], ["!=", "mode", "static"]],
             paint: {
               "circle-radius": 5,
-              "circle-color": "#D20C0C",
+              "circle-color": props.color,
             },
           },
 
@@ -120,7 +124,7 @@ function RDraw(props: RDrawProps) {
             },
             paint: {
               "line-color": "#000",
-              "line-width": 3,
+              "line-width": props.line_width,
             },
           },
           {
@@ -130,7 +134,7 @@ function RDraw(props: RDrawProps) {
             paint: {
               "fill-color": "#000",
               "fill-outline-color": "#000",
-              "fill-opacity": 0.1,
+              "fill-opacity": props.fill_opacity,
             },
           },
           {
@@ -143,7 +147,7 @@ function RDraw(props: RDrawProps) {
             },
             paint: {
               "line-color": "#000",
-              "line-width": 3,
+              "line-width": props.line_width,
             },
           },
         ],

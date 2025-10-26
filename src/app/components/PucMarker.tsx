@@ -4,6 +4,7 @@ interface PucMarkerProps {
   speciesCount: number;
   baseColor: string; // Hex color like '#RRGGBB'
   upper: number; // Max possible species count
+  opacity?: number;
 }
 
 // Helper function to convert RGB (0-255) to HSL (H: 0-360, S/L: 0-100)
@@ -41,7 +42,12 @@ const rgbToHsl = (r: number, g: number, b: number) => {
   return [h * 360, s * 100, l * 100]; // HSL values
 };
 
-function PucMarker({ speciesCount, baseColor, upper }: PucMarkerProps) {
+function PucMarker({
+  speciesCount,
+  baseColor,
+  opacity = 1,
+  upper,
+}: PucMarkerProps) {
   const getColorWithLightness = ({
     speciesCount,
     baseColor,
@@ -74,7 +80,6 @@ function PucMarker({ speciesCount, baseColor, upper }: PucMarkerProps) {
     const colorString = `hsl(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(
       finalLightness
     )}%)`;
-    console.log(colorString);
     return colorString;
   };
 
@@ -88,10 +93,20 @@ function PucMarker({ speciesCount, baseColor, upper }: PucMarkerProps) {
       y="0px"
       viewBox="0 0 100 100"
       enableBackground="new 0 0 100 100"
+      style={{ cursor: "pointer" }}
     >
       {/* <circle cx="50" cy="50" r="50" fill="white" /> */}
       <path
-        fill={getColorWithLightness({ speciesCount, baseColor, upper })} // Call the new function
+        stroke="black"
+        strokeWidth={5}
+        strokeOpacity={opacity}
+        opacity={opacity}
+        fill={getColorWithLightness({
+          speciesCount,
+          baseColor,
+          upper,
+          opacity,
+        })} // Call the new function
         d="M41.284,16.77c-6.892-8.522-22.535-8.018-31.278,3.399c-1.577,2.059-2.811,4.729-3.743,7.761l-5.836,2.436l4.57,2.841  c-2.102,11.536-0.88,25.768,2.064,32.698c9.018,21.227,38.185,27.266,55.113,20.588c24.564-9.692,37.398-29.309,37.398-29.309  S70.898,56.879,41.284,16.77z M21.102,26.478c-0.336,1.649-2.192,2.682-4.146,2.305c-1.954-0.376-3.266-2.019-2.93-3.668  c0.335-1.649,2.192-2.682,4.146-2.306C20.126,23.186,21.437,24.828,21.102,26.478z M78.92,65.088  c-2.406,6.359-13.541,8.04-24.867,3.754C42.726,64.556,35.494,55.926,37.9,49.565c2.406-6.36,13.54-8.041,24.868-3.754  C74.094,50.097,81.326,58.728,78.92,65.088z"
       ></path>
     </svg>
