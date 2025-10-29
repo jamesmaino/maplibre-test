@@ -347,7 +347,7 @@ function Map({ data }: { data: MapData }) {
           </RPopup>
         )}
       </RMap>
-      <div className="absolute left-4 top-4 flex flex-col space-y-2">
+      <div className="absolute left-4 top-20 flex flex-col space-y-2">
         {buttonConfigs.map(
           (config, index) =>
             !config.hidden && (
