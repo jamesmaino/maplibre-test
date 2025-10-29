@@ -71,7 +71,9 @@ function TooltipLayer({ popupInfo }: { popupInfo: any }) {
               setTooltipInfo({
                 longitude: e.lngLat.lng,
                 latitude: e.lngLat.lat,
-                properties: { EVC: topFeature.properties.EVC_name },
+                properties: {
+                  EVC: `${topFeature.properties.EVC_name} (${topFeature.properties.Status})`,
+                },
               });
             }, 500);
             setTooltipTimeout(timeout);
