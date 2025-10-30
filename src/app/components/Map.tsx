@@ -2,6 +2,7 @@
 
 import CustomMarker from "./CustomMarker";
 import PucMarker from "./PucMarker";
+import BirdPopup from "./BirdPopup";
 import { MapData } from "../../types/data";
 import { useState, useEffect, useCallback } from "react";
 import { Protocol } from "pmtiles";
@@ -26,6 +27,7 @@ function Map({ data }: { data: MapData }) {
     longitude: number;
     latitude: number;
     properties: any;
+    type?: "bird" | "default";
   } | null>(null);
 
   const transectFeatures: FeatureCollection = {
@@ -90,8 +92,9 @@ function Map({ data }: { data: MapData }) {
 
   const maxSpeciesTotals =
     Math.max(
-      ...(data.birdData.map((station) => station?.speciesData?.total ?? 0) ||
-        [])
+      ...(data.birdData.map(
+        (station) => station?.speciesData?.counts?.length ?? 0
+      ) || [])
     ) || 0;
 
   const handleMapClick = (e: MapLayerMouseEvent) => {
@@ -192,7 +195,8 @@ function Map({ data }: { data: MapData }) {
               paint={{ "raster-opacity": 0.7 }}
             />
             {data.birdData.map((station) => {
-              const speciesCount = station.speciesData?.total || 0;
+              const uniqueSpeciesCount =
+                station.speciesData?.counts?.length || 0;
 
               return (
                 <RMarker
@@ -201,19 +205,27 @@ function Map({ data }: { data: MapData }) {
                   latitude={station.coords.lat}
                   onClick={(e) => {
                     e.stopPropagation();
+                    const sortedSpecies =
+                      station.speciesData?.counts
+                        ?.slice()
+                        .sort((a, b) => b.count - a.count) || [];
+
                     setPopupInfo({
                       longitude: station.coords.lon,
                       latitude: station.coords.lat,
+                      type: "bird",
                       properties: {
-                        total_birds: station?.speciesData?.total
-                          ? station?.speciesData.total
-                          : null,
+                        station_name: station.name,
+                        unique_species: uniqueSpeciesCount,
+                        total_detections: station?.speciesData?.total ?? null,
+                        date: station?.speciesData?.date ?? null,
+                        species_list: sortedSpecies,
                       },
                     });
                   }}
                 >
                   <PucMarker
-                    speciesCount={speciesCount}
+                    speciesCount={uniqueSpeciesCount}
                     baseColor={Colors.foreground4}
                     opacity={Colors.foreground_opacity}
                     upper={maxSpeciesTotals}
@@ -320,23 +332,30 @@ function Map({ data }: { data: MapData }) {
             onMapMove={() => setPopupInfo(null)}
             onMapClick={() => setPopupInfo(null)}
           >
-            {/* Assuming popupInfo is an object containing the feature properties */}
             <div className="p-2 text-xs">
-              <h4 className="font-bold mb-1">Feature Info</h4>
-
-              {Object.entries(popupInfo.properties)
-                // Filter out keys (the first item in the array) that START with '_'
-                .filter(([key]) => !key.startsWith("_"))
-
-                // Map the filtered entries to your JSX elements
-                .map(([key, value]) => (
-                  <p key={key} className="text-slate-600">
-                    <span className="font-semibold">
-                      {key.replaceAll("_", " ")}:
-                    </span>{" "}
-                    {String(value)}
-                  </p>
-                ))}
+              {popupInfo.type === "bird" ? (
+                <BirdPopup
+                  stationName={popupInfo.properties.station_name}
+                  date={popupInfo.properties.date}
+                  uniqueSpecies={popupInfo.properties.unique_species}
+                  totalDetections={popupInfo.properties.total_detections}
+                  speciesList={popupInfo.properties.species_list || []}
+                />
+              ) : (
+                <>
+                  <h4 className="font-bold mb-1">Feature Info</h4>
+                  {Object.entries(popupInfo.properties)
+                    .filter(([key]) => !key.startsWith("_"))
+                    .map(([key, value]) => (
+                      <p key={key} className="text-slate-600">
+                        <span className="font-semibold">
+                          {key.replaceAll("_", " ")}:
+                        </span>{" "}
+                        {String(value)}
+                      </p>
+                    ))}
+                </>
+              )}
             </div>
             <button
               className=" maplibregl-popup-close-button flex items-center text-lg py-1 px-2"
