@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { RLayer, RPopup } from "maplibre-react-components";
 import { MapLayerMouseEvent } from "maplibre-gl";
-import * as Colors from './Colors';
+import * as Colors from "./Colors";
 
 function TooltipLayer({ popupInfo }: { popupInfo: any }) {
   const [tooltipInfo, setTooltipInfo] = useState<{
@@ -35,16 +35,25 @@ function TooltipLayer({ popupInfo }: { popupInfo: any }) {
           "fill-color": [
             "match",
             ["get", "Group"],
-            "Wet or Damp Forests", Colors.background1,
-            "Riparian Scrubs or Swampy Scrubs and Woodlands", Colors.background2,
-            "Herb-rich Woodlands", Colors.background3,
-            "Plains Grasslands and Chenopod Shrublands", Colors.background4,
-            "Riverine Grassy Woodlands or Forests", Colors.background5,
-            "Mallee", Colors.background6,
-            "Lower Slopes or Hills Woodlands", Colors.background7,
-            "Dry Forests", Colors.background8,
-            "Plains Woodlands or Forests", Colors.background9,
-            Colors.background10
+            "Wet or Damp Forests",
+            Colors.background1,
+            "Riparian Scrubs or Swampy Scrubs and Woodlands",
+            Colors.background2,
+            "Herb-rich Woodlands",
+            Colors.background3,
+            "Plains Grasslands and Chenopod Shrublands",
+            Colors.background4,
+            "Riverine Grassy Woodlands or Forests",
+            Colors.background5,
+            "Mallee",
+            Colors.background6,
+            "Lower Slopes or Hills Woodlands",
+            Colors.background7,
+            "Dry Forests",
+            Colors.background8,
+            "Plains Woodlands or Forests",
+            Colors.background9,
+            Colors.background10,
           ],
           "fill-opacity": Colors.background_opacity,
         }}
@@ -62,7 +71,9 @@ function TooltipLayer({ popupInfo }: { popupInfo: any }) {
               setTooltipInfo({
                 longitude: e.lngLat.lng,
                 latitude: e.lngLat.lat,
-                properties: { EVC: topFeature.properties.EVC_name },
+                properties: {
+                  EVC: `${topFeature.properties.EVC_name} (${topFeature.properties.Status})`,
+                },
               });
             }, 500);
             setTooltipTimeout(timeout);
