@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { RLayer, RPopup } from "maplibre-react-components";
 import { MapLayerMouseEvent } from "maplibre-gl";
-import * as Colors from "./Colors";
+import * as Colors from "../../shared/constants/Colors";
 
 function TooltipLayer({ popupInfo }: { popupInfo: any }) {
   const [tooltipInfo, setTooltipInfo] = useState<{

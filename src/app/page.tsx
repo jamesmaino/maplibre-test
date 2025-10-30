@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
-import ClientMap from "./components/ClientMap";
+import ClientMap from "./components/map/ClientMap";
 import { MapData } from "../types/data";
 
 export default function Home() {
