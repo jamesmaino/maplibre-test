@@ -12,8 +12,8 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         const users = [
-          { id: "1", name: "user1", password: "pass1", group: "admin" },
-          { id: "2", name: "user2", password: "pass2", group: "user" }
+          { id: "1", name: "user1", password: "pass1", group: "admin", landcareGroup:"halls-gap"},
+          { id: "2", name: "user2", password: "pass2", group: "user", landcareGroup:"jallukar" }
         ]
 
         const user = users.find(user => user.name === credentials?.username && user.password === credentials?.password)
@@ -30,11 +30,15 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.group = user.group
+        token.landcareGroup = user.landcareGroup
+
       }
       return token
     },
     async session({ session, token }) {
-      session.user.group = token.group as string
+      session.user.group = token.group as string,
+      session.user.landcareGroup = token.group as string
+
       return session
     }
   }

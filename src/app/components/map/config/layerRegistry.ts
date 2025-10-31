@@ -1,8 +1,58 @@
+
 import { ComponentType } from "react";
-import { MapData } from "../../../../types/data";
-import { VegetationLayer } from "../layers/VegetationLayer";
-import { BirdFeedLayers } from "../layers/BirdFeedLayers";
-import { GroupDataLayers } from "../layers/GroupDataLayers";
+import { Session } from "next-auth";
+import { weedSurveyLayer } from "../layers/WeedSurveyLayer";
+import { vegetationLayer } from "../layers/VegetationLayer";
+import { birdFeedLayer } from "../layers/BirdFeedLayer";
+import { squirrelGliderLayer } from "../layers/SquirrelGliderLayer";
+import { transectLayer } from "../layers/TransectLayer";
+import { historicalSitesLayer } from "../layers/HistoricalSitesLayer";
+import { iNaturalistLayer } from "../layers/INaturalistLayer";
+
+export interface UserContext {
+  user: {
+    name?: string;
+    email?: string;
+    group?: string;
+    landcareGroup?: string;
+  };
+  session: Session;
+}
+
+export interface LayerConfig<TData = any> {
+  id: string;
+  name: string;
+  defaultVisible: boolean;
+
+  // Data source configuration
+  dataSource?: {
+    type: "fulcrum" | "graphql" | "rest";
+    requiresAuth?: "admin" | "user" | "public";
+
+    // Query with {{variable}} template syntax (Fulcrum) or GraphQL query
+    query: string;
+
+    // Extract template variables from user context
+    // For Fulcrum: returns Record<string, string> for template replacement
+    // For GraphQL: returns Record<string, any> for GraphQL variables
+    templateVars?: (userContext: UserContext) => Record<string, any>;
+
+    // Transform raw API response
+    transform?: (rawData: any) => TData | Promise<TData>;
+  };
+
+  // Component (can be lazy-loaded)
+  Component: ComponentType<LayerComponentProps<TData>>;
+
+  // Conditional rendering
+  shouldShow?: (data: TData) => boolean;
+}
+
+export interface LayerComponentProps<TData = any> {
+  data: TData;
+  onPopupOpen: (info: PopupInfo) => void;
+  layerId: string; // For generating unique layer IDs
+}
 
 export interface PopupInfo {
   longitude: number;
@@ -12,70 +62,78 @@ export interface PopupInfo {
 }
 
 /**
- * Common props passed to all layer components
- */
-export interface LayerComponentProps {
-  data: MapData;
-  onPopupOpen: (info: PopupInfo) => void;
-}
-
-/**
- * Layer configuration interface
- */
-export interface LayerConfig {
-  id: string;
-  name: string;
-  defaultVisible: boolean;
-  Component: ComponentType<LayerComponentProps>;
-  // Determines if layer should be shown based on data availability
-  shouldShow?: (data: MapData) => boolean;
-}
-
-/**
- * Central registry of all map layers
+ * Nested Layer Registry - Organized by Page
  *
- * To add a new layer:
- * 1. Create your layer component implementing LayerComponentProps
- * 2. Add an entry here
- * 3. Done!
+ * Three main pages:
+ * - biolinks: Main map with bird, wildlife, and ecological data
+ * - weeds: Weed management focus
+ * - heritage: Historical sites focus
  */
-export const LAYER_REGISTRY: LayerConfig[] = [
-  {
-    id: "vegetation",
-    name: "Vegetation",
-    defaultVisible: true,
-    Component: VegetationLayer,
-  },
-  {
-    id: "birdFeeds",
-    name: "Feeds",
-    defaultVisible: false,
-    Component: BirdFeedLayers,
-  },
-  {
-    id: "groupData",
-    name: "Group Data",
-    defaultVisible: true,
-    Component: GroupDataLayers,
-    shouldShow: (data) =>
-      data.squirrel_glider_data.length > 0 ||
-      data.transect_data.length > 0 ||
-      data.historical_data.length > 0,
-  },
-];
+export const LAYER_REGISTRY = {
+  // BioLinks - main ecological monitoring page
+  biolinks: [
+    vegetationLayer,
+    iNaturalistLayer,
+    birdFeedLayer,
+    squirrelGliderLayer,
+    transectLayer,
+    historicalSitesLayer
+  ],
+
+  // Weed management page
+  weeds: [
+    vegetationLayer,
+    weedSurveyLayer,
+  ],
+
+  // Heritage/historical sites page
+  heritage: [
+    vegetationLayer,
+    historicalSitesLayer,
+  ],
+} as const;
 
 /**
- * Get layer configuration by ID
+ * Helper function to get layers for a specific page
+ * @param pageId - The page identifier (defaults to 'biolinks')
+ * @returns Array of LayerConfig for the specified page
  */
-export function getLayerConfig(id: string): LayerConfig | undefined {
-  return LAYER_REGISTRY.find((layer) => layer.id === id);
+export function getLayersForPage(pageId: keyof typeof LAYER_REGISTRY = 'biolinks'): readonly LayerConfig[] {
+  return LAYER_REGISTRY[pageId] || LAYER_REGISTRY.biolinks;
 }
 
 /**
- * Get visible layers based on data
+ * Get a specific layer by its ID (searches across all pages)
+ * @param layerId - The layer ID to find
+ * @returns LayerConfig or undefined if not found
  */
-export function getVisibleLayers(data: MapData): LayerConfig[] {
-  return LAYER_REGISTRY.filter(
-    (layer) => !layer.shouldShow || layer.shouldShow(data)
-  );
+export function getLayerById(layerId: string): LayerConfig | undefined {
+  for (const page of Object.values(LAYER_REGISTRY)) {
+    const layer = page.find(l => l.id === layerId);
+    if (layer) return layer;
+  }
+  return undefined;
+}
+
+/**
+ * Get multiple layers by their IDs
+ * @param layerIds - Array of layer IDs
+ * @returns Array of found LayerConfig objects
+ */
+export function getLayersByIds(layerIds: string[]): LayerConfig[] {
+  return layerIds
+    .map(id => getLayerById(id))
+    .filter((layer): layer is LayerConfig => layer !== undefined);
+}
+
+/**
+ * Generate consistent layer IDs from base layer ID
+ */
+export function getLayerIds(layerId: string) {
+  return {
+    source: `${layerId}-source`,
+    fill: `${layerId}-fill`,
+    line: `${layerId}-line`,
+    marker: `${layerId}-marker`,
+  };
 }

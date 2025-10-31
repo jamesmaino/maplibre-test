@@ -1,10 +1,23 @@
 
-import { NextResponse } from 'next/server'
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
-import { MapData, Observation, Transect, HistoricalData, BirdData } from "../../../types/data";
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import {
+  getLayersByIds,
+  UserContext,
+  LayerConfig,
+} from "@/app/components/map/config/layerRegistry";
+import { applyTemplate } from "@/utils/queryTemplates";
 
-async function getData(url: string) {
+async function fetchFulcrumData(query: string) {
+  const baseUrl = "https://api.fulcrumapp.com/api/v2/query";
+  const params =
+    "format=json&headers=true&metadata=false&arrays=false&page=1&per_page=20000";
+  const url = `${baseUrl}?q=${encodeURIComponent(query)}&${params}`;
+
+  // Disable cache in development, cache for 24 hours in production
+  const revalidate = process.env.NODE_ENV === 'development' ? 0 : 86400;
+
   const options = {
     method: "GET",
     headers: {
@@ -12,202 +25,170 @@ async function getData(url: string) {
       "User-Agent": "Application",
       "X-ApiToken": process.env.FULCRUM_API_KEY || "",
     },
-    next: { revalidate: 86400 },
+    next: { revalidate },
   };
 
   const res = await fetch(url, options);
-
   if (!res.ok) {
-    // This will activate the closest `error.js` Error Boundary
-    throw new Error("Failed to fetch data");
+    throw new Error(`Fulcrum API error: ${res.status} ${res.statusText}`);
   }
 
   const data = await res.json();
   return data.rows;
 }
 
-async function postData(query: string, variables: object) {
-  const options = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      query,
-      variables,
-    }),
-    next: { revalidate: 86400 }, // Revalidate once a day
-  };
+async function fetchGraphQLData(query: string, variables: object) {
+    // Disable cache in development, cache for 24 hours in production
+    const revalidate = process.env.NODE_ENV === 'development' ? 0 : 86400;
 
-  const res = await fetch("https://app.birdweather.com/graphql", options);
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+        },
+        body: JSON.stringify({
+            query,
+            variables,
+        }),
+        next: { revalidate },
+    };
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch data from BirdWeather API");
+    // This is hardcoded for BirdWeather API, but could be made generic
+    const res = await fetch("https://app.birdweather.com/graphql", options);
+
+    if (!res.ok) {
+        throw new Error("Failed to fetch data from GraphQL API");
+    }
+
+    const data = await res.json();
+    return data.data;
+}
+
+function checkAuth(
+  required: "admin" | "user" | "public" | undefined,
+  ctx: UserContext
+): boolean {
+  if (!required || required === "public") return true;
+  if (required === "user") return !!ctx.session.user;
+  if (required === "admin") return ctx.user?.group === "admin";
+  return false;
+}
+
+/**
+ * Fetch data for a single layer
+ */
+async function fetchLayerData(
+  layer: LayerConfig,
+  userContext: UserContext
+): Promise<{ id: string; data: any } | { id: string; error: string }> {
+  try {
+    // Skip layers without data source
+    if (!layer.dataSource) {
+      return { id: layer.id, data: [] };
+    }
+
+    // Check auth requirements
+    if (!checkAuth(layer.dataSource.requiresAuth, userContext)) {
+      return { id: layer.id, error: "Unauthorized" };
+    }
+
+    // Apply template variables to query
+    let queryStr = layer.dataSource.query;
+    let variables = {};
+    if (layer.dataSource.templateVars) {
+      variables = layer.dataSource.templateVars(userContext);
+      // Only apply string template replacement for Fulcrum queries
+      if (layer.dataSource.type === "fulcrum") {
+        queryStr = applyTemplate(queryStr, variables as Record<string, string>);
+      }
+    }
+
+    // Fetch data based on source type
+    console.log(`Fetching ${queryStr}`)
+
+    let rawData: any;
+    if (layer.dataSource.type === "fulcrum") {
+      rawData = await fetchFulcrumData(queryStr);
+    } else if (layer.dataSource.type === "graphql") {
+        rawData = await fetchGraphQLData(layer.dataSource.query, variables);
+    }
+    // Add other source types here (rest, etc.)
+
+    // Transform data if transformer provided
+    const transformedData = layer.dataSource.transform
+      ? await layer.dataSource.transform(rawData)
+      : rawData;
+
+    return { id: layer.id, data: transformedData };
+  } catch (error) {
+    console.error(`Error fetching data for layer ${layer.id}:`, error);
+    return {
+      id: layer.id,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
-
-  const data = await res.json();
-  return data.data;
 }
 
-interface Station {
-  id: string;
-  name: string;
-  location: string;
-  coords: {
-    lat: number;
-    lon: number;
-  };
-}
-
-export async function GET() {
-  const session = await getServerSession(authOptions)
+/**
+ * GET /api/data?layers=weedSurveys&layers=fauna
+ *
+ * Fetches data for specified layers only (prevents over-fetching)
+ * Executes all fetches in parallel (improves performance)
+ * Gracefully handles failures (returns partial data + errors)
+ */
+export async function GET(request: NextRequest) {
+  const session = await getServerSession(authOptions);
 
   if (!session) {
-    return new NextResponse("Unauthorized", { status: 401 })
+    return new NextResponse("Unauthorized", { status: 401 });
   }
 
-  let squirrel_glider_data: Observation[] = [];
-  let transect_data: Transect[] = [];
-  let historical_data: HistoricalData[] = [];
+  // Build user context
+  const userContext: UserContext = {
+    user: {
+      name: session.user.name ?? undefined,
+      email: session.user.email ?? undefined,
+      group: session.user.group ?? undefined,
+      landcareGroup: session.user.landcareGroup || "Halls Gap LCG",
+    },
+    session,
+  };
 
-  if (session.user?.group === "admin") {
-    const historicalSitesQuery = `
-      SELECT
-          *
-      FROM
-          "LOOKUP TABLE Long Term Sites Jallukar LCG"
-    `;
+  // 🚀 PERFORMANCE: Only fetch requested layers
+  const { searchParams } = request.nextUrl;
+  const requestedLayerIds = searchParams.getAll("layers");
 
-    const squirrelGliderQuery = `
-      SELECT
-          _child_record_id AS observation_id,
-          _parent_id AS parent_record_id,
-          common_name,
-          scientific_name,
-          number_of_individuals,
-          behaviour_notes,
-          _latitude,
-          _longitude,
-          _geometry
-      FROM
-          "Project Platypus field crew logging/animals_observed"
-      WHERE
-          common_name = 'Squirrel Glider '
-      ORDER BY
-          _parent_id;
-    `;
-
-    const transectQuery = `
-      SELECT
-          *
-      FROM
-          "Project Platypus field crew logging"
-      WHERE
-          'Glider survey' = ANY(activity_type)
-          AND is_this_a_day_or_night_survey = 'night'
-          AND is_this_a_day_or_night_survey IS NOT NULL
-    `;
-
-    const baseUrl = "https://api.fulcrumapp.com/api/v2/query";
-    const params =
-      "format=json&headers=true&metadata=false&arrays=false&page=1&per_page=20000";
-
-    const squirrel_glider_url = `${baseUrl}?q=${encodeURIComponent(
-      squirrelGliderQuery
-    )}&${params}`;
-    const transect_url = `${baseUrl}?q=${encodeURIComponent(
-      transectQuery
-    )}&${params}`;
-    const historical_url = `${baseUrl}?q=${encodeURIComponent(
-      historicalSitesQuery
-    )}&${params}`;
-
-    squirrel_glider_data = await getData(squirrel_glider_url);
-    transect_data = await getData(transect_url);
-    historical_data = await getData(historical_url);
+  // Return empty if no layers requested
+  if (requestedLayerIds.length === 0) {
+    return NextResponse.json({ data: {}, errors: {} });
   }
 
-  const stationsQuery = `
-    query StationsInBox(
-      $ne: InputLocation!
-      $sw: InputLocation!
-    ) {
-      stations(ne: $ne, sw: $sw) {
-        nodes {
-          id
-          name
-          location
-          coords {
-            lat
-            lon
-          }
-        }
-      }
+  // Get only the requested layers by their IDs
+  const layersToFetch = getLayersByIds(requestedLayerIds);
+
+  if (layersToFetch.length === 0) {
+    return NextResponse.json({ data: {}, errors: {} });
+  }
+
+  // 🚀 PERFORMANCE: Fetch all layers in parallel
+  const results = await Promise.all(
+    layersToFetch.map((layer) => fetchLayerData(layer, userContext))
+  );
+
+  // 🛡️ RESILIENCY: Separate successful data from errors
+  const data: Record<string, any> = {};
+  const errors: Record<string, string> = {};
+
+  for (const result of results) {
+    if ("data" in result) {
+      data[result.id] = result.data;
+    } else if ("error" in result) {
+      errors[result.id] = result.error;
     }
-  `;
+  }
 
-  const speciesQuery = `
-    query DailySpeciesBreakdown(
-      $stationId: [ID!]!
-      $timePeriod: InputDuration
-    ) {
-      dailyDetectionCounts(
-        stationIds: $stationId
-        period: $timePeriod
-      ) {
-        date
-        total
-        counts {
-          count
-          species {
-            id
-            commonName
-            scientificName
-          }
-        }
-      }
-    }
-  `;
-
-  const stationVariables = {
-    ne: {
-      lat: -36.87034,
-      lon: 143.157963,
-    },
-    sw: {
-      lat: -37.25989,
-      lon: 142.428217,
-    },
-  };
-
-  const stationsData = await postData(stationsQuery, stationVariables);
-  const stations = stationsData.stations.nodes;
-
-  const stationSpeciesPromises = stations.map((station: Station) => {
-    const speciesVariables = {
-      stationId: [station.id],
-      timePeriod: { count: 1, unit: "day" },
-    };
-    return postData(speciesQuery, speciesVariables);
-  });
-
-  const speciesResults = await Promise.all(stationSpeciesPromises);
-
-  const birdData: BirdData[] = stations.map((station: Station, index: number) => {
-    const speciesData = speciesResults[index]?.dailyDetectionCounts[0];
-    return {
-      ...station,
-      speciesData: speciesData || null,
-    };
-  });
-
-  const data: MapData = {
-    squirrel_glider_data,
-    transect_data,
-    historical_data,
-    birdData,
-  };
-
-  return NextResponse.json(data)
+  // Return both successful data and errors
+  // Client can decide how to handle partial failures
+  return NextResponse.json({ data, errors });
 }

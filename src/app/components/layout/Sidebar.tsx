@@ -14,8 +14,8 @@ export default function Sidebar() {
 
   const navItems = [
     { name: "Biolinks Map", href: "/" },
-    { name: "Weed Map", href: "/weed-map" },
-    { name: "Long Term Sites", href: "/long-term-sites" },
+    { name: "Weed Map", href: "/weeds" },
+    { name: "Long Term Sites", href: "/heritage" },
     { name: "About", href: "/about" },
   ];
 
@@ -114,12 +114,7 @@ export default function Sidebar() {
       </aside>
 
       {/* Overlay for mobile */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
-          onClick={toggleSidebar}
-        />
-      )}
+      {isOpen && <div className="fixed inset-0 z-30" onClick={toggleSidebar} />}
     </>
   );
 }

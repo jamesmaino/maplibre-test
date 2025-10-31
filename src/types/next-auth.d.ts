@@ -7,11 +7,13 @@ declare module "next-auth" {
   interface Session {
     user: {
       /** The user's postal address. */
-      group: string
+      group: string,
+      landcareGroup:string
     } & DefaultSession["user"]
   }
 
   interface User extends DefaultUser {
-    group: string
+    group: string,
+    landcareGroup:string
   }
 }

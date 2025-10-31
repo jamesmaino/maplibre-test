@@ -1,56 +1,10 @@
-import { Geometry } from 'geojson';
+// Generic map data - layers are keyed by layer ID
+export type MapData = Record<string, any>;
 
-export interface Observation {
-  observation_id: string;
-  parent_record_id: string;
-  common_name: string;
-  scientific_name: string;
-  number_of_individuals: number;
-  behaviour_notes: string;
-  _latitude: number;
-  _longitude: number;
-  _geometry: string;
-}
-
-export interface Transect {
-  _record_id: string;
-  _geometry: Geometry;
-}
-
-export interface HistoricalData {
-  _record_id: string;
-  _latitude: number;
-  _longitude: number;
-  _geometry: Geometry;
-  polygon_points: string;
-  site_name: string;
-}
-
-export interface BirdData {
-  id: string;
-  name: string;
-  location: string | null;
-  coords: {
-    lat: number;
-    lon: number;
-  };
-  speciesData: {
-    date: string;
-    total: number;
-    counts: {
-      count: number;
-      species: {
-        id: string;
-        commonName: string;
-        scientificName: string;
-      };
-    }[];
-  } | null;
-}
-
-export interface MapData {
-  squirrel_glider_data: Observation[];
-  transect_data: Transect[];
-  historical_data: HistoricalData[];
-  birdData: BirdData[];
+// For type safety, you can extend with known layers:
+export interface TypedMapData extends Record<string, any> {
+  birdData?: any[]; // Replace with more specific type if available
+  weedSurveys?: any[]; // Replace with more specific type if available
+  vegetation?: any[]; // Replace with more specific type if available
+  // Add other known layers as needed
 }

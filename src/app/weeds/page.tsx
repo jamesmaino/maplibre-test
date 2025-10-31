@@ -1,16 +1,16 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import ClientMap from "./components/map/ClientMap";
+import ClientMap from "../components/map/ClientMap";
 
-export default function Home() {
+export default function WeedsPage() {
   const { data: session } = useSession();
 
   if (session) {
     return (
       <div className="min-h-screen flex flex-col">
         <main>
-          <ClientMap pageId="biolinks" />
+          <ClientMap pageId="weeds" />
         </main>
       </div>
     );

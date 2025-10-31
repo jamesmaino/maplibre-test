@@ -3,26 +3,72 @@
 import { useState, useEffect } from "react";
 import { RLayer, RPopup } from "maplibre-react-components";
 import { MapLayerMouseEvent } from "maplibre-gl";
-import * as Colors from "../../shared/constants/Colors";
+import * as Colors from "../../../shared/constants/Colors";
+import { LayerConfig, LayerComponentProps } from "../../config/layerRegistry";
 
-function TooltipLayer({ popupInfo }: { popupInfo: any }) {
-  const [tooltipInfo, setTooltipInfo] = useState<{
-    longitude: number;
-    latitude: number;
-    properties: any;
-  } | null>(null);
+// ==========================================
+// 1. Type Definitions
+// ==========================================
+
+interface TooltipInfo {
+  longitude: number;
+  latitude: number;
+  properties: {
+    EVC: string;
+  };
+}
+
+// ==========================================
+// 2. Main Layer Component
+// ==========================================
+
+function VegetationComponent({
+  data,
+  onPopupOpen,
+  layerId,
+}: LayerComponentProps) {
+  const [tooltipInfo, setTooltipInfo] = useState<TooltipInfo | null>(null);
   const [tooltipTimeout, setTooltipTimeout] = useState<NodeJS.Timeout | null>(
     null
   );
 
   useEffect(() => {
-    if (popupInfo) {
+    // Cleanup timeout on unmount
+    return () => {
       if (tooltipTimeout) {
         clearTimeout(tooltipTimeout);
       }
+    };
+  }, [tooltipTimeout]);
+
+  const handleMouseMove = (e: MapLayerMouseEvent) => {
+    if (tooltipTimeout) {
+      clearTimeout(tooltipTimeout);
+    }
+
+    if (e.features && e.features.length > 0) {
+      const topFeature = e.features[0];
+      const timeout = setTimeout(() => {
+        setTooltipInfo({
+          longitude: e.lngLat.lng,
+          latitude: e.lngLat.lat,
+          properties: {
+            EVC: `${topFeature.properties.EVC_name} (${topFeature.properties.Status})`,
+          },
+        });
+      }, 500);
+      setTooltipTimeout(timeout);
+    } else {
       setTooltipInfo(null);
     }
-  }, [popupInfo, tooltipTimeout]);
+  };
+
+  const handleMouseLeave = () => {
+    if (tooltipTimeout) {
+      clearTimeout(tooltipTimeout);
+    }
+    setTooltipInfo(null);
+  };
 
   return (
     <>
@@ -57,36 +103,8 @@ function TooltipLayer({ popupInfo }: { popupInfo: any }) {
           ],
           "fill-opacity": Colors.background_opacity,
         }}
-        onMouseMove={(e: MapLayerMouseEvent) => {
-          if (tooltipTimeout) {
-            clearTimeout(tooltipTimeout);
-          }
-
-          if (popupInfo) return;
-
-          if (e.features && e.features.length > 0) {
-            const topFeature = e.features[0];
-            const timeout = setTimeout(() => {
-              if (popupInfo) return;
-              setTooltipInfo({
-                longitude: e.lngLat.lng,
-                latitude: e.lngLat.lat,
-                properties: {
-                  EVC: `${topFeature.properties.EVC_name} (${topFeature.properties.Status})`,
-                },
-              });
-            }, 500);
-            setTooltipTimeout(timeout);
-          } else {
-            setTooltipInfo(null);
-          }
-        }}
-        onMouseLeave={() => {
-          if (tooltipTimeout) {
-            clearTimeout(tooltipTimeout);
-          }
-          setTooltipInfo(null);
-        }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
       />
       {tooltipInfo && (
         <RPopup
@@ -107,4 +125,14 @@ function TooltipLayer({ popupInfo }: { popupInfo: any }) {
   );
 }
 
-export default TooltipLayer;
+// ==========================================
+// 3. Layer Configuration
+// ==========================================
+
+export const vegetationLayer: LayerConfig = {
+  id: "vegetation",
+  name: "Vegetation",
+  defaultVisible: true,
+  Component: VegetationComponent,
+  // Note: No dataSource - uses vector tiles from map style (protomaps source)
+};

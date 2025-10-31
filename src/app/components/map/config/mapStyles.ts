@@ -52,13 +52,3 @@ export function createMapStyle() {
     ],
   };
 }
-
-/**
- * Draw control configuration
- */
-export const DRAW_CONFIG = {
-  color: Colors.normal6,
-  opacity: Colors.foreground_opacity,
-  fill_opacity: Colors.foreground_fill_opacity,
-  line_width: Colors.line_width,
-};

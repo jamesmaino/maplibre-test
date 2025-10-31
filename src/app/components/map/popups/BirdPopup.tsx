@@ -20,7 +20,7 @@ export default function BirdPopup({
   totalDetections,
   speciesList,
 }: BirdPopupProps) {
-  const dateString = new Date("12 May 2024").toLocaleDateString("en-GB", {
+  const dateString = new Date(date as string).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
     year: "numeric",

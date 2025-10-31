@@ -25,14 +25,6 @@ export const TILE_SOURCES = {
 export const LAYER_IDS = {
   OSM: "osm",
   CARTO: "carto",
-  INATURALIST: "inaturalist-layer",
-  INATURALIST_SOURCE: "inaturalist-source",
-  TRANSECTS_FILL: "transects-fill",
-  TRANSECTS_LINE: "transects-line",
-  HISTORICAL_SITES_FILL: "historical-sites-fill",
-  HISTORICAL_SITES_LINE: "historical-sites-line",
-  TRANSECTS_SOURCE: "transects",
-  HISTORICAL_SITES_SOURCE: "historical-sites",
 } as const;
 
 /**
