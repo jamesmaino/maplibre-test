@@ -1,4 +1,3 @@
-
 import { useMemo } from "react";
 import { RSource, RLayer } from "maplibre-react-components";
 import { MapLayerMouseEvent } from "maplibre-gl";
@@ -116,8 +115,6 @@ function WeedSurveyComponent({
 export const weedSurveyLayer: LayerConfig<WeedSurvey[]> = {
   id: "weedSurveys",
   name: "Weed Surveys",
-  defaultVisible: false,
-
   dataSource: {
     type: "fulcrum",
     requiresAuth: "user",

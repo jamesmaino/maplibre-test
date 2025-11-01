@@ -1,4 +1,3 @@
-
 import { useMemo } from "react";
 import { RSource, RLayer } from "maplibre-react-components";
 import { Geometry, FeatureCollection } from "geojson";
@@ -29,20 +28,40 @@ export interface HistoricalData {
 // 2. Data Transformation
 // ==========================================
 
+function mapNullValuesToMissing(site: HistoricalData): HistoricalData {
+  const newSite = { ...site };
+
+  for (const key in newSite) {
+    if (
+      newSite.hasOwnProperty(key) &&
+      newSite[key as keyof HistoricalData] === null
+    ) {
+      (newSite[key as keyof HistoricalData] as any) = "MISSING";
+    }
+  }
+
+  return newSite;
+}
+
 function transformToGeoJSON(data: HistoricalData[]): FeatureCollection {
   const features = data
     .filter((site) => {
       if (!site._geometry) {
-        console.warn(`Historical site ${site._record_id} missing geometry, skipping`);
+        console.warn(
+          `Historical site ${site._record_id} missing geometry, skipping`
+        );
         return false;
       }
       return true;
     })
-    .map((site) => ({
-      type: "Feature" as const,
-      properties: { ...site },
-      geometry: site._geometry,
-    }));
+    .map((site) => {
+      const siteWithMissing = mapNullValuesToMissing(site);
+      return {
+        type: "Feature" as const,
+        properties: { ...siteWithMissing },
+        geometry: siteWithMissing._geometry,
+      };
+    });
 
   return {
     type: "FeatureCollection",
@@ -54,7 +73,11 @@ function transformToGeoJSON(data: HistoricalData[]): FeatureCollection {
 // 3. Main Layer Component
 // ==========================================
 
-function HistoricalSitesComponent({ data, onPopupOpen, layerId }: LayerComponentProps<FeatureCollection>) {
+function HistoricalSitesComponent({
+  data,
+  onPopupOpen,
+  layerId,
+}: LayerComponentProps<FeatureCollection>) {
   const ids = getLayerIds(layerId);
 
   const handleClick = (e: MapLayerMouseEvent) => {
@@ -62,7 +85,6 @@ function HistoricalSitesComponent({ data, onPopupOpen, layerId }: LayerComponent
       longitude: e.lngLat.lng,
       latitude: e.lngLat.lat,
       properties: e.features ? e.features[0].properties : null,
-      showMissingData: true, // Encourage users to fill in missing data
     });
   };
 

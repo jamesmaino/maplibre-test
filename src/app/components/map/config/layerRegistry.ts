@@ -22,7 +22,6 @@ export interface UserContext {
 export interface LayerConfig<TData = any> {
   id: string;
   name: string;
-  defaultVisible: boolean;
 
   // Data source configuration
   dataSource?: {
@@ -61,6 +60,11 @@ export interface PopupInfo {
   type?: "bird" | "default";
 }
 
+export interface PageLayerConfig {
+  layer: LayerConfig;
+  defaultVisible: boolean;
+}
+
 /**
  * Nested Layer Registry - Organized by Page
  *
@@ -69,36 +73,38 @@ export interface PopupInfo {
  * - weeds: Weed management focus
  * - heritage: Historical sites focus
  */
-export const LAYER_REGISTRY = {
+export const LAYER_REGISTRY: Record<string, readonly PageLayerConfig[]> = {
   // BioLinks - main ecological monitoring page
   biolinks: [
-    vegetationLayer,
-    iNaturalistLayer,
-    birdFeedLayer,
-    squirrelGliderLayer,
-    transectLayer,
-    historicalSitesLayer
+    { layer: vegetationLayer, defaultVisible: true },
+    { layer: iNaturalistLayer, defaultVisible: true },
+    { layer: birdFeedLayer, defaultVisible: true },
+    { layer: squirrelGliderLayer, defaultVisible: true },
+    { layer: transectLayer, defaultVisible: false },
+    { layer: historicalSitesLayer, defaultVisible: false },
   ],
 
   // Weed management page
   weeds: [
-    vegetationLayer,
-    weedSurveyLayer,
+    { layer: vegetationLayer, defaultVisible: true },
+    { layer: weedSurveyLayer, defaultVisible: true },
   ],
 
   // Heritage/historical sites page
   heritage: [
-    vegetationLayer,
-    historicalSitesLayer,
+    { layer: vegetationLayer, defaultVisible: true },
+    { layer: historicalSitesLayer, defaultVisible: true },
   ],
 } as const;
 
 /**
  * Helper function to get layers for a specific page
  * @param pageId - The page identifier (defaults to 'biolinks')
- * @returns Array of LayerConfig for the specified page
+ * @returns Array of PageLayerConfig for the specified page
  */
-export function getLayersForPage(pageId: keyof typeof LAYER_REGISTRY = 'biolinks'): readonly LayerConfig[] {
+export function getLayersForPage(
+  pageId: keyof typeof LAYER_REGISTRY = "biolinks"
+): readonly PageLayerConfig[] {
   return LAYER_REGISTRY[pageId] || LAYER_REGISTRY.biolinks;
 }
 
@@ -109,8 +115,8 @@ export function getLayersForPage(pageId: keyof typeof LAYER_REGISTRY = 'biolinks
  */
 export function getLayerById(layerId: string): LayerConfig | undefined {
   for (const page of Object.values(LAYER_REGISTRY)) {
-    const layer = page.find(l => l.id === layerId);
-    if (layer) return layer;
+    const pageLayer = page.find((l) => l.layer.id === layerId);
+    if (pageLayer) return pageLayer.layer;
   }
   return undefined;
 }

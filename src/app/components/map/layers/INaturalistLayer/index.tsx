@@ -35,7 +35,6 @@ function INaturalistComponent({ layerId }: LayerComponentProps) {
 export const iNaturalistLayer: LayerConfig = {
   id: "iNaturalist",
   name: "iNaturalist",
-  defaultVisible: true,
   Component: INaturalistComponent,
   // Note: No dataSource - uses raster tiles from iNaturalist
 };

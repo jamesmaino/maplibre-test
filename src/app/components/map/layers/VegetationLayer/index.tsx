@@ -132,7 +132,6 @@ function VegetationComponent({
 export const vegetationLayer: LayerConfig = {
   id: "vegetation",
   name: "Vegetation",
-  defaultVisible: true,
   Component: VegetationComponent,
   // Note: No dataSource - uses vector tiles from map style (protomaps source)
 };

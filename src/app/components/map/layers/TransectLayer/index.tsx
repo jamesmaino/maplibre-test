@@ -1,4 +1,3 @@
-
 import { RSource, RLayer } from "maplibre-react-components";
 import { Geometry, FeatureCollection } from "geojson";
 import { LayerComponentProps, LayerConfig } from "../../config/layerRegistry";
@@ -33,7 +32,10 @@ function transformToGeoJSON(data: Transect[]): FeatureCollection {
 // 3. Main Layer Component
 // ==========================================
 
-function TransectComponent({ data, layerId }: LayerComponentProps<FeatureCollection>) {
+function TransectComponent({
+  data,
+  layerId,
+}: LayerComponentProps<FeatureCollection>) {
   const ids = getLayerIds(layerId);
 
   return (
@@ -68,23 +70,17 @@ function TransectComponent({ data, layerId }: LayerComponentProps<FeatureCollect
 // 4. Layer Configuration
 // ==========================================
 
-export const transectLayer: LayerConfig<FeatureCollection> = {
+export const transectLayer: LayerConfig = {
   id: "transects",
   name: "Transects",
-  defaultVisible: true,
   Component: TransectComponent,
   dataSource: {
     type: "fulcrum",
-    requiresAuth: "admin",
     query: `
       SELECT
-          *
-      FROM
-          "Project Platypus field crew logging"
-      WHERE
-          'Glider survey' = ANY(activity_type)
-          AND is_this_a_day_or_night_survey = 'night'
-          AND is_this_a_day_or_night_survey IS NOT NULL
+        * 
+      FROM 
+        "Transects"
     `,
     transform: transformToGeoJSON,
   },
