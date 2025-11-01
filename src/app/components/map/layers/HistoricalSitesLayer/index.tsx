@@ -124,7 +124,6 @@ function HistoricalSitesComponent({
 export const historicalSitesLayer: LayerConfig<FeatureCollection> = {
   id: "historicalSites",
   name: "Historical Sites",
-  defaultVisible: true,
   Component: HistoricalSitesComponent,
   dataSource: {
     type: "fulcrum",

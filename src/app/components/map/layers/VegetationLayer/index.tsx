@@ -1,73 +1,31 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { RLayer, RPopup } from "maplibre-react-components";
+import { useState } from "react";
+import { RLayer } from "maplibre-react-components";
 import { MapLayerMouseEvent } from "maplibre-gl";
 import * as Colors from "../../../shared/constants/Colors";
 import { LayerConfig, LayerComponentProps } from "../../config/layerRegistry";
 
 // ==========================================
-// 1. Type Definitions
-// ==========================================
-
-interface TooltipInfo {
-  longitude: number;
-  latitude: number;
-  properties: {
-    EVC: string;
-  };
-}
-
-// ==========================================
 // 2. Main Layer Component
 // ==========================================
 
-function VegetationComponent({
-  data,
-  onPopupOpen,
-  layerId,
-}: LayerComponentProps) {
-  const [tooltipInfo, setTooltipInfo] = useState<TooltipInfo | null>(null);
-  const [tooltipTimeout, setTooltipTimeout] = useState<NodeJS.Timeout | null>(
-    null
-  );
+function VegetationComponent({ onPopupOpen }: LayerComponentProps) {
+  const [selectedEVC, setSelectedEVC] = useState<string | number | null>(null);
 
-  useEffect(() => {
-    // Cleanup timeout on unmount
-    return () => {
-      if (tooltipTimeout) {
-        clearTimeout(tooltipTimeout);
-      }
-    };
-  }, [tooltipTimeout]);
-
-  const handleMouseMove = (e: MapLayerMouseEvent) => {
-    if (tooltipTimeout) {
-      clearTimeout(tooltipTimeout);
-    }
-
+  const handleClick = (e: MapLayerMouseEvent) => {
     if (e.features && e.features.length > 0) {
-      const topFeature = e.features[0];
-      const timeout = setTimeout(() => {
-        setTooltipInfo({
-          longitude: e.lngLat.lng,
-          latitude: e.lngLat.lat,
-          properties: {
-            EVC: `${topFeature.properties.EVC_name} (${topFeature.properties.Status})`,
-          },
-        });
-      }, 500);
-      setTooltipTimeout(timeout);
+      const feature = e.features[0];
+      const evc = feature.properties.EVC;
+      setSelectedEVC(evc);
+      onPopupOpen({
+        longitude: e.lngLat.lng,
+        latitude: e.lngLat.lat,
+        properties: feature.properties,
+      });
     } else {
-      setTooltipInfo(null);
+      setSelectedEVC(null);
     }
-  };
-
-  const handleMouseLeave = () => {
-    if (tooltipTimeout) {
-      clearTimeout(tooltipTimeout);
-    }
-    setTooltipInfo(null);
   };
 
   return (
@@ -103,23 +61,20 @@ function VegetationComponent({
           ],
           "fill-opacity": Colors.background_opacity,
         }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
+        onClick={handleClick}
       />
-      {tooltipInfo && (
-        <RPopup
-          className="inverted-tooltip"
-          longitude={tooltipInfo.longitude}
-          latitude={tooltipInfo.latitude}
-          onMapMove={() => setTooltipInfo(null)}
-        >
-          <div className="px-1 text-xs">
-            <p>
-              <span className="font-semibold">EVC:</span>{" "}
-              {String(tooltipInfo.properties.EVC)}
-            </p>
-          </div>
-        </RPopup>
+      {selectedEVC && (
+        <RLayer
+          id="vic-highlight"
+          source="protomaps"
+          source-layer="NV2005_EVCBCS_subset"
+          type="line"
+          paint={{
+            "line-color": "#444444",
+            "line-width": 1,
+          }}
+          filter={["==", ["get", "EVC"], selectedEVC]}
+        />
       )}
     </>
   );
