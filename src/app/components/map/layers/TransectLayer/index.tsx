@@ -76,11 +76,16 @@ export const transectLayer: LayerConfig = {
   Component: TransectComponent,
   dataSource: {
     type: "fulcrum",
+    requiresAuth: "admin",
     query: `
       SELECT
-        * 
-      FROM 
-        "Transects"
+          *
+      FROM
+          "Project Platypus field crew logging"
+      WHERE
+          'Glider survey' = ANY(activity_type)
+          AND is_this_a_day_or_night_survey = 'night'
+          AND is_this_a_day_or_night_survey IS NOT NULL
     `,
     transform: transformToGeoJSON,
   },
