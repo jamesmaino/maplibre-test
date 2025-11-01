@@ -12,8 +12,11 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         const users = [
-          { id: "1", name: "user1", password: "pass1", group: "admin", landcareGroup:"halls-gap"},
-          { id: "2", name: "user2", password: "pass2", group: "admin", landcareGroup:"moyston" }
+          { id: "1", name: "jallukar", password: "platypus", group: "admin", landcareGroup:"jallukar"},
+          { id: "2", name: "moyston", password: "platypus", group: "admin", landcareGroup:"moyston" },
+          { id: "3", name: "black-range", password: "platypus", group: "admin", landcareGroup:"black-range"},
+          { id: "4", name: "elmhurst", password: "platypus", group: "admin", landcareGroup:"elmhurst" },
+          { id: "5", name: "northern-grampians", password: "platypus", group: "admin", landcareGroup:"northern-grampians"},
         ]
 
         const user = users.find(user => user.name === credentials?.username && user.password === credentials?.password)

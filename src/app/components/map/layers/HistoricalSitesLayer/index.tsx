@@ -104,7 +104,7 @@ function HistoricalSitesComponent({
     "match",
     ["get", "site_type_simple"],
     "Revegetation",
-    Colors.normal2,
+    Colors.background2,
     "Remnant habitat",
     Colors.foreground8,
     /* other */ Colors.background9,
@@ -118,7 +118,7 @@ function HistoricalSitesComponent({
         source={ids.source}
         type="fill"
         paint={{
-          "fill-color": siteColorExpression,
+          "fill-color": siteColorExpression as string,
           "fill-opacity": Colors.foreground_fill_opacity,
         }}
         onClick={handleClick}
@@ -140,22 +140,64 @@ function HistoricalSitesComponent({
 }
 
 // ==========================================
-// 4. Layer Configuration
+// 4. Helper Functions
+// ==========================================
+
+const SITE_TABLES = [
+  "LOOKUP TABLE Long Term Sites Jallukar LCG",
+  "LOOKUP TABLE Long Term Sites Moyston LCG",
+  "LOOKUP TABLE Long Term Sites Black Range LMG",
+  "LOOKUP TABLE Long Term Sites Elmhurst LCG",
+  "LOOKUP TABLE Long Term Sites Northern Grampians LCG",
+];
+
+const SITE_COLUMNS = [
+  "_record_id",
+  "_latitude",
+  "_longitude",
+  "_geometry",
+  "site_name",
+  "site_type",
+  "site_description",
+  "site_landcare",
+  "site_year_established",
+  "site_landholder_original",
+  "site_landholder_current",
+  "site_manager_name",
+  "site_initial_goals",
+  "site_performance",
+  "_created_at",
+  "_updated_at",
+];
+
+const SITE_TYPE_FILTER =
+  "site_type && ARRAY['Revegetation', 'Remnant habitat', 'Habitat supplement site']";
+
+function buildHistoricalSitesQuery(): string {
+  const selectClause = SITE_COLUMNS.join(",\n        ");
+
+  return SITE_TABLES.map(
+    (table) => `
+      SELECT
+        ${selectClause}
+      FROM "${table}"
+      WHERE ${SITE_TYPE_FILTER}
+    `
+  ).join("\n      UNION ALL\n");
+}
+
+// ==========================================
+// 5. Layer Configuration
 // ==========================================
 
 export const historicalSitesLayer: LayerConfig<FeatureCollection> = {
   id: "historicalSites",
-  name: "Historical Sites",
+  name: "Habitat Islands",
   Component: HistoricalSitesComponent,
   dataSource: {
     type: "fulcrum",
     requiresAuth: "admin",
-    query: `
-      SELECT
-          *
-      FROM
-          "LOOKUP TABLE Long Term Sites Jallukar LCG"
-    `,
+    query: buildHistoricalSitesQuery(),
     transform: transformToGeoJSON,
   },
   shouldShow: (data) => data.features.length > 0,

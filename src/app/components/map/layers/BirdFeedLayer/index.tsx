@@ -1,9 +1,6 @@
 import { useMemo, memo } from "react";
 import { RMarker } from "maplibre-react-components";
-import {
-  LayerComponentProps,
-  LayerConfig,
-} from "../../config/layerRegistry";
+import { LayerComponentProps, LayerConfig } from "../../config/layerRegistry";
 import * as Colors from "../../../shared/constants/Colors";
 
 // ==========================================
@@ -233,7 +230,7 @@ function BirdFeedComponent({
 
 export const birdFeedLayer: LayerConfig<BirdData[]> = {
   id: "birdData",
-  name: "Bird Feed",
+  name: "Bird Stations",
   Component: BirdFeedComponent,
   dataSource: {
     type: "graphql",

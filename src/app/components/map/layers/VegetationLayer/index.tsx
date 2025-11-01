@@ -108,7 +108,11 @@ function VegetationComponent({ onPopupOpen }: LayerComponentProps) {
           "line-width": 1,
           "line-opacity": selectedEVC ? 1 : 0,
         }}
-        filter={selectedEVC ? ["==", ["get", "EVC"], selectedEVC] : ["==", ["get", "EVC"], ""]}
+        filter={
+          selectedEVC
+            ? ["==", ["get", "EVC"], selectedEVC]
+            : ["==", ["get", "EVC"], ""]
+        }
       />
     </>
   );
@@ -120,7 +124,7 @@ function VegetationComponent({ onPopupOpen }: LayerComponentProps) {
 
 export const vegetationLayer: LayerConfig = {
   id: "vegetation",
-  name: "Vegetation",
+  name: "Habitat Type",
   Component: VegetationComponent,
   // Note: No dataSource - uses vector tiles from map style (protomaps source)
 };

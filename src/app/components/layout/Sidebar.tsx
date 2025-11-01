@@ -2,21 +2,21 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useSession, signIn, signOut } from "next-auth/react";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
   const { data: session } = useSession();
+  const currentPath = usePathname();
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
 
   const navItems = [
-    { name: "Biolinks Map", href: "/" },
+    { name: "Biolinks Map", href: "/biolinks" },
     { name: "Weed Map", href: "/weeds" },
-    { name: "Long Term Sites", href: "/heritage" },
-    { name: "About", href: "/about" },
   ];
 
   return (
@@ -76,7 +76,11 @@ export default function Sidebar() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className="block px-4 py-2 rounded hover:bg-slate-700 transition-colors"
+                      className={`block px-4 py-2 rounded transition-colors ${
+                        currentPath === item.href
+                          ? "bg-blue-500"
+                          : "hover:bg-slate-700"
+                      }`}
                     >
                       {item.name}
                     </Link>

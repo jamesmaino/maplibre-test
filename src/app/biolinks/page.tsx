@@ -3,14 +3,14 @@
 import { useSession } from "next-auth/react";
 import ClientMap from "../components/map/ClientMap";
 
-export default function HeritagePage() {
+export default function Home() {
   const { data: session } = useSession();
 
   if (session) {
     return (
       <div className="min-h-screen flex flex-col">
         <main>
-          <ClientMap pageId="heritage" />
+          <ClientMap pageId="biolinks" />
         </main>
       </div>
     );

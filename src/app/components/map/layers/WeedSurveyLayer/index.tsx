@@ -14,13 +14,12 @@ import * as Colors from "../../../shared/constants/Colors";
 // 0. Helper Functions (local to this layer)
 // ==========================================
 
-/**
- * Map user groups to safe, hard-coded table names
- * This prevents SQL injection via user-controlled group names
- */
 const GROUP_TO_FORM_NAME: Record<string, string> = {
-  "halls-gap": "Halls Gap LCG",
+  jallukar: "Jallukar LCG",
   moyston: "Moyston LCG",
+  "black-range": "Black Range LMG",
+  elmhurst: "Elmhurst LCG",
+  "northern-grampians": "Northern Grampians LCG",
 };
 
 function getFormNameForGroup(landcareGroup?: string): string {

@@ -74,11 +74,8 @@ export const LAYER_REGISTRY: Record<string, readonly PageLayerConfig[]> = {
   // BioLinks - main ecological monitoring page
   biolinks: [
     { layer: vegetationLayer, defaultVisible: true },
-    { layer: iNaturalistLayer, defaultVisible: false },
-    { layer: birdFeedLayer, defaultVisible: false },
-    { layer: squirrelGliderLayer, defaultVisible: false },
-    { layer: transectLayer, defaultVisible: false },
     { layer: historicalSitesLayer, defaultVisible: true },
+    { layer: birdFeedLayer, defaultVisible: false },
   ],
 
   // Weed management page
@@ -86,12 +83,18 @@ export const LAYER_REGISTRY: Record<string, readonly PageLayerConfig[]> = {
     { layer: vegetationLayer, defaultVisible: true },
     { layer: weedSurveyLayer, defaultVisible: true },
   ],
-
-  // Heritage/historical sites page
-  heritage: [
-    { layer: historicalSitesLayer, defaultVisible: true },
+  
+  // All layers
+   all: [
     { layer: vegetationLayer, defaultVisible: true },
-  ],
+    { layer: iNaturalistLayer, defaultVisible: false },
+    { layer: birdFeedLayer, defaultVisible: false },
+    { layer: squirrelGliderLayer, defaultVisible: false },
+    { layer: transectLayer, defaultVisible: false },
+    { layer: historicalSitesLayer, defaultVisible: true },
+    { layer: weedSurveyLayer, defaultVisible: true },
+
+   ]
 } as const;
 
 /**
