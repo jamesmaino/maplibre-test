@@ -1,5 +1,5 @@
 interface DefaultPopupProps {
-  properties: Record<string, any>;
+  properties: Record<string, unknown>;
 }
 
 /**

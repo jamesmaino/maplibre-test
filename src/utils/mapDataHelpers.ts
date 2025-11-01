@@ -1,4 +1,3 @@
-import { MapData } from "@/types/data";
 import { LayerConfig } from "@/app/components/map/config/layerRegistry";
 
 /**
@@ -6,7 +5,7 @@ import { LayerConfig } from "@/app/components/map/config/layerRegistry";
  * Returns correctly typed data or undefined
  */
 export function getLayerData<T>(
-  mapData: Record<string, any>,
+  mapData: Record<string, unknown>,
   layerConfig: LayerConfig<T>
 ): T | undefined {
   return mapData[layerConfig.id] as T | undefined;
@@ -16,7 +15,7 @@ export function getLayerData<T>(
  * Check if layer has data
  */
 export function hasLayerData<T>(
-  mapData: Record<string, any>,
+  mapData: Record<string, unknown>,
   layerConfig: LayerConfig<T>
 ): boolean {
   const data = mapData[layerConfig.id];

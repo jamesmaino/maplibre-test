@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { RSource, RLayer } from "maplibre-react-components";
 import { Geometry, FeatureCollection } from "geojson";
 import { MapLayerMouseEvent } from "maplibre-gl";
@@ -36,6 +35,7 @@ function mapNullValuesToMissing(site: HistoricalData): HistoricalData {
       newSite.hasOwnProperty(key) &&
       newSite[key as keyof HistoricalData] === null
     ) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (newSite[key as keyof HistoricalData] as any) = "MISSING";
     }
   }
@@ -43,7 +43,8 @@ function mapNullValuesToMissing(site: HistoricalData): HistoricalData {
   return newSite;
 }
 
-function transformToGeoJSON(data: HistoricalData[]): FeatureCollection {
+function transformToGeoJSON(rawData: unknown): FeatureCollection {
+  const data = rawData as HistoricalData[];
   const features = data
     .filter((site) => {
       if (!site._geometry) {
@@ -118,7 +119,8 @@ function HistoricalSitesComponent({
         source={ids.source}
         type="fill"
         paint={{
-          "fill-color": siteColorExpression as string,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          "fill-color": siteColorExpression as any,
           "fill-opacity": Colors.foreground_fill_opacity,
         }}
         onClick={handleClick}
@@ -130,7 +132,8 @@ function HistoricalSitesComponent({
         source={ids.source}
         type="line"
         paint={{
-          "line-color": siteColorExpression,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          "line-color": siteColorExpression as any,
           "line-width": Colors.line_width,
           "line-opacity": Colors.foreground_opacity,
         }}
@@ -149,6 +152,7 @@ const SITE_TABLES = [
   "LOOKUP TABLE Long Term Sites Black Range LMG",
   "LOOKUP TABLE Long Term Sites Elmhurst LCG",
   "LOOKUP TABLE Long Term Sites Northern Grampians LCG",
+  "LOOKUP TABLE Long Term Sites Halls Gap LCG",
 ];
 
 const SITE_COLUMNS = [

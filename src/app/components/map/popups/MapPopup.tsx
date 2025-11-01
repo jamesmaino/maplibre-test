@@ -25,11 +25,18 @@ export function MapPopup({ popupInfo, onClose }: MapPopupProps) {
       <div className="p-2 text-xs">
         {popupInfo.type === "bird" ? (
           <BirdPopup
-            stationName={popupInfo.properties.station_name}
-            date={popupInfo.properties.date}
-            uniqueSpecies={popupInfo.properties.unique_species}
-            totalDetections={popupInfo.properties.total_detections}
-            speciesList={popupInfo.properties.species_list || []}
+            stationName={popupInfo.properties.station_name as string}
+            date={popupInfo.properties.date as string | null}
+            uniqueSpecies={popupInfo.properties.unique_species as number}
+            totalDetections={popupInfo.properties.total_detections as number | null}
+            speciesList={(popupInfo.properties.species_list || []) as Array<{
+              count: number;
+              species: {
+                id: string;
+                commonName: string;
+                scientificName: string;
+              };
+            }>}
           />
         ) : (
           <DefaultPopup properties={popupInfo.properties} />

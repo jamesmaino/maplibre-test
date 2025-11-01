@@ -33,7 +33,7 @@ async function fetchLayerData(
 
   userContext: UserContext
 
-): Promise<{ id: string; data: any } | { id: string; error: string }> {
+): Promise<{ id: string; data: unknown } | { id: string; error: string }> {
 
   try {
 
@@ -65,7 +65,7 @@ async function fetchLayerData(
     // Fetch data based on source type
     console.log(`Fetching ${queryStr}`)
 
-    let rawData: any;
+    let rawData: unknown;
     const fetcher = fetcherRegistry[layer.dataSource.type];
 
     if (fetcher) {
@@ -206,7 +206,7 @@ export async function GET(request: NextRequest) {
 
   // 🛡️ RESILIENCY: Separate successful data from errors
 
-  const data: Record<string, any> = {};
+  const data: Record<string, unknown> = {};
 
   const errors: Record<string, string> = {};
 

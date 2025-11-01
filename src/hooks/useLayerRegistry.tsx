@@ -2,7 +2,6 @@
 import { useState, useMemo, useEffect } from "react";
 import {
   getLayersForPage,
-  PageLayerConfig,
   PopupInfo,
 } from "../app/components/map/config/layerRegistry";
 import { MapData } from "@/types/data";

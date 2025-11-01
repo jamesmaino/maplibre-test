@@ -43,8 +43,19 @@ CustomMarker.displayName = "CustomMarker";
 // 3. Data Transformation
 // ==========================================
 
-function transformToObservations(data: any[]): Observation[] {
-  return data.map((row) => ({
+function transformToObservations(data: unknown): Observation[] {
+  const rows = data as Array<{
+    observation_id: string;
+    parent_record_id: string;
+    common_name: string;
+    scientific_name: string;
+    number_of_individuals: number;
+    behaviour_notes: string;
+    _latitude: number;
+    _longitude: number;
+    _geometry: string;
+  }>;
+  return rows.map((row) => ({
     observation_id: row.observation_id,
     parent_record_id: row.parent_record_id,
     common_name: row.common_name,
@@ -65,11 +76,11 @@ function SquirrelGliderComponent({
   data,
   onPopupOpen,
 }: LayerComponentProps<Observation[]>) {
-  const handleSquirrelGliderClick = (point: any) => {
+  const handleSquirrelGliderClick = (point: Observation) => {
     onPopupOpen({
       longitude: point._longitude,
       latitude: point._latitude,
-      properties: point,
+      properties: point as unknown as Record<string, unknown>,
     });
   };
 

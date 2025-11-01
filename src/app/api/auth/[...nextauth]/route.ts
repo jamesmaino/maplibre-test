@@ -17,6 +17,8 @@ export const authOptions: NextAuthOptions = {
           { id: "3", name: "black-range", password: "platypus", group: "admin", landcareGroup:"black-range"},
           { id: "4", name: "elmhurst", password: "platypus", group: "admin", landcareGroup:"elmhurst" },
           { id: "5", name: "northern-grampians", password: "platypus", group: "admin", landcareGroup:"northern-grampians"},
+          { id: "6", name: "halls-gap", password: "platypus", group: "admin", landcareGroup:"halls-gap"},
+
         ]
 
         const user = users.find(user => user.name === credentials?.username && user.password === credentials?.password)
@@ -39,8 +41,8 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }) {
-      session.user.group = token.group as string,
-      session.user.landcareGroup = token.landcareGroup as string
+      session.user.group = token.group as string;
+      session.user.landcareGroup = token.landcareGroup as string;
 
       return session
     }

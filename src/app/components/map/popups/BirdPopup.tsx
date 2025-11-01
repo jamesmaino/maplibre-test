@@ -17,7 +17,6 @@ export default function BirdPopup({
   stationName,
   date,
   uniqueSpecies,
-  totalDetections,
   speciesList,
 }: BirdPopupProps) {
   const dateString = new Date(date as string).toLocaleDateString("en-GB", {

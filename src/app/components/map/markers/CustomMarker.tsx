@@ -1,7 +1,5 @@
 import { memo } from "react";
 
-import * as Colors from './Colors';
-
 interface CustomMarkerProps {
   baseColor: string;
   opacity: number;

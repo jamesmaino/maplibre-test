@@ -171,11 +171,12 @@ function RDraw(props: RDrawProps) {
   );
 
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     map.addControl(draw as any);
 
     const mapCanvas = map.getCanvas();
 
-    const onModeChange = (e: any) => {
+    const onModeChange = (e: { mode: string }) => {
       if (
         e.mode === "draw_polygon" ||
         e.mode === "draw_line_string" ||
@@ -188,20 +189,22 @@ function RDraw(props: RDrawProps) {
     };
 
     map.on("draw.modechange", onModeChange);
-    map.on("draw.create", (e: any) => {
+    map.on("draw.create", (e: { features: GeoJSON.Feature[] }) => {
       props.onCreate(e.features);
     });
-    map.on("draw.update", (e: any) => {
+    map.on("draw.update", (e: { features: GeoJSON.Feature[] }) => {
       props.onUpdate(e.features);
     });
-    map.on("draw.delete", (e: any) => {
+    map.on("draw.delete", (e: { features: GeoJSON.Feature[] }) => {
       props.onDelete(e.features);
     });
     return () => {
       map.off("draw.modechange", onModeChange);
       mapCanvas.style.cursor = "";
-      map.removeControl(draw);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      map.removeControl(draw as any);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return null;

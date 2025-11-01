@@ -17,7 +17,8 @@ export interface Transect {
 // 2. Data Transformation
 // ==========================================
 
-function transformToGeoJSON(data: Transect[]): FeatureCollection {
+function transformToGeoJSON(rawData: unknown): FeatureCollection {
+  const data = rawData as Transect[];
   return {
     type: "FeatureCollection",
     features: data.map((transect) => ({
@@ -70,7 +71,7 @@ function TransectComponent({
 // 4. Layer Configuration
 // ==========================================
 
-export const transectLayer: LayerConfig = {
+export const transectLayer: LayerConfig<FeatureCollection> = {
   id: "transects",
   name: "Transects",
   Component: TransectComponent,

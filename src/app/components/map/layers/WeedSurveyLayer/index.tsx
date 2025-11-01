@@ -20,6 +20,7 @@ const GROUP_TO_FORM_NAME: Record<string, string> = {
   "black-range": "Black Range LMG",
   elmhurst: "Elmhurst LCG",
   "northern-grampians": "Northern Grampians LCG",
+  "halls-gap": "Halls Gap LCG",
 };
 
 function getFormNameForGroup(landcareGroup?: string): string {

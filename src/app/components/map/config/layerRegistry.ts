@@ -19,7 +19,7 @@ export interface UserContext {
   session: Session;
 }
 
-export interface LayerConfig<TData = any> {
+export interface LayerConfig<TData = unknown> {
   id: string;
   name: string;
 
@@ -34,7 +34,7 @@ export interface LayerConfig<TData = any> {
     query: string | ((userContext: UserContext) => string);
 
     // Transform raw API response
-    transform?: (rawData: any) => TData | Promise<TData>;
+    transform?: (rawData: unknown) => TData | Promise<TData>;
   };
 
   // Component (can be lazy-loaded)
@@ -44,7 +44,7 @@ export interface LayerConfig<TData = any> {
   shouldShow?: (data: TData) => boolean;
 }
 
-export interface LayerComponentProps<TData = any> {
+export interface LayerComponentProps<TData = unknown> {
   data: TData;
   onPopupOpen: (info: PopupInfo) => void;
   layerId: string; // For generating unique layer IDs
@@ -53,12 +53,13 @@ export interface LayerComponentProps<TData = any> {
 export interface PopupInfo {
   longitude: number;
   latitude: number;
-  properties: any;
+  properties: Record<string, unknown>;
   type?: "bird" | "default";
 }
 
 export interface PageLayerConfig {
-  layer: LayerConfig;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  layer: LayerConfig<any>;
   defaultVisible: boolean;
 }
 
