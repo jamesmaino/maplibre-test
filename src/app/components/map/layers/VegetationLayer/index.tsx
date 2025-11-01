@@ -7,14 +7,18 @@ import * as Colors from "../../../shared/constants/Colors";
 import { LayerConfig, LayerComponentProps } from "../../config/layerRegistry";
 
 // ==========================================
-// 2. Main Layer Component
+// 1. Main Layer Component
 // ==========================================
 
 function VegetationComponent({ onPopupOpen }: LayerComponentProps) {
   const [selectedEVC, setSelectedEVC] = useState<string | number | null>(null);
 
   const handleClick = (e: MapLayerMouseEvent) => {
+    if (e.defaultPrevented) {
+      return;
+    }
     if (e.features && e.features.length > 0) {
+      e.preventDefault();
       const feature = e.features[0];
       const evc = feature.properties.EVC;
       setSelectedEVC(evc);
@@ -63,22 +67,23 @@ function VegetationComponent({ onPopupOpen }: LayerComponentProps) {
         }}
         onClick={handleClick}
       />
-      {selectedEVC && (
-        <RLayer
-          id="vic-highlight"
-          source="protomaps"
-          source-layer="NV2005_EVCBCS_subset"
-          type="line"
-          paint={{
-            "line-color": "#444444",
-            "line-width": 1,
-          }}
-          filter={["==", ["get", "EVC"], selectedEVC]}
-        />
-      )}
     </>
   );
 }
+
+//  {selectedEVC && (
+//         <RLayer
+//           id="vic-highlight"
+//           source="protomaps"
+//           source-layer="NV2005_EVCBCS_subset"
+//           type="line"
+//           paint={{
+//             "line-color": "#444444",
+//             "line-width": 1,
+//           }}
+//           filter={["==", ["get", "EVC"], selectedEVC]}
+//         />
+//       )}
 
 // ==========================================
 // 3. Layer Configuration

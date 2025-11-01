@@ -25,7 +25,7 @@ export interface LayerConfig<TData = any> {
 
   // Data source configuration
   dataSource?: {
-    type: "fulcrum" | "graphql" | "rest";
+    type: "fulcrum" | "graphql";
     requiresAuth?: "admin" | "user" | "public";
 
     // Query with {{variable}} template syntax (Fulcrum) or GraphQL query

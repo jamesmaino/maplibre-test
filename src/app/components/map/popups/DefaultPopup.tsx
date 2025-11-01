@@ -6,7 +6,6 @@ interface DefaultPopupProps {
  * Generic popup for non-bird features
  */
 export function DefaultPopup({ properties }: DefaultPopupProps) {
-  console.log(properties);
   return (
     <div className="max-h-60 overflow-y-auto">
       <h4 className="font-bold mb-1">Feature Info</h4>

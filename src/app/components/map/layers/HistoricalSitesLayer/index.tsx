@@ -56,9 +56,13 @@ function transformToGeoJSON(data: HistoricalData[]): FeatureCollection {
     })
     .map((site) => {
       const siteWithMissing = mapNullValuesToMissing(site);
+      const simpleSiteType = siteWithMissing.site_type?.[0] || "Unknown";
       return {
         type: "Feature" as const,
-        properties: { ...siteWithMissing },
+        properties: {
+          ...siteWithMissing,
+          site_type_simple: simpleSiteType,
+        },
         geometry: siteWithMissing._geometry,
       };
     });
@@ -81,12 +85,30 @@ function HistoricalSitesComponent({
   const ids = getLayerIds(layerId);
 
   const handleClick = (e: MapLayerMouseEvent) => {
-    onPopupOpen({
-      longitude: e.lngLat.lng,
-      latitude: e.lngLat.lat,
-      properties: e.features ? e.features[0].properties : null,
-    });
+    if (e.defaultPrevented) {
+      return;
+    }
+
+    if (e.features && e.features.length > 0) {
+      e.originalEvent.preventDefault();
+      e.originalEvent.stopPropagation();
+      onPopupOpen({
+        longitude: e.lngLat.lng,
+        latitude: e.lngLat.lat,
+        properties: e.features[0].properties,
+      });
+    }
   };
+
+  const siteColorExpression = [
+    "match",
+    ["get", "site_type_simple"],
+    "Revegetation",
+    Colors.normal2,
+    "Remnant habitat",
+    Colors.foreground8,
+    /* other */ Colors.background9,
+  ];
 
   return (
     <>
@@ -96,7 +118,7 @@ function HistoricalSitesComponent({
         source={ids.source}
         type="fill"
         paint={{
-          "fill-color": Colors.foreground8,
+          "fill-color": siteColorExpression,
           "fill-opacity": Colors.foreground_fill_opacity,
         }}
         onClick={handleClick}
@@ -108,7 +130,7 @@ function HistoricalSitesComponent({
         source={ids.source}
         type="line"
         paint={{
-          "line-color": Colors.foreground8,
+          "line-color": siteColorExpression,
           "line-width": Colors.line_width,
           "line-opacity": Colors.foreground_opacity,
         }}
