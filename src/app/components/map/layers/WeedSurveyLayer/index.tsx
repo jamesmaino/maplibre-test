@@ -9,7 +9,24 @@ import {
 } from "../../config/layerRegistry";
 import { getLayerIds } from "../../config/layerRegistry";
 import * as Colors from "../../../shared/constants/Colors";
-import { getFormNameForGroup } from "@/config/groupMappings";
+
+// ==========================================
+// 0. Helper Functions (local to this layer)
+// ==========================================
+
+/**
+ * Map user groups to safe, hard-coded table names
+ * This prevents SQL injection via user-controlled group names
+ */
+const GROUP_TO_FORM_NAME: Record<string, string> = {
+  "halls-gap": "Halls Gap LCG",
+  moyston: "Moyston LCG",
+};
+
+function getFormNameForGroup(landcareGroup?: string): string {
+  const groupKey = (landcareGroup || "halls-gap").toLowerCase();
+  return GROUP_TO_FORM_NAME[groupKey] || GROUP_TO_FORM_NAME["halls-gap"];
+}
 
 // ==========================================
 // 1. Type Definitions (local to this layer)
@@ -70,11 +87,18 @@ function WeedSurveyComponent({
   const geoJsonData = useMemo(() => transformToGeoJSON(data), [data]);
 
   const handleClick = (e: MapLayerMouseEvent) => {
-    onPopupOpen({
-      longitude: e.lngLat.lng,
-      latitude: e.lngLat.lat,
-      properties: e.features ? e.features[0].properties : null,
-    });
+    if (e.defaultPrevented) {
+      return;
+    }
+
+    if (e.features && e.features.length > 0) {
+      e.preventDefault();
+      onPopupOpen({
+        longitude: e.lngLat.lng,
+        latitude: e.lngLat.lat,
+        properties: e.features[0].properties,
+      });
+    }
   };
 
   return (
@@ -119,42 +143,27 @@ export const weedSurveyLayer: LayerConfig<WeedSurvey[]> = {
     type: "fulcrum",
     requiresAuth: "user",
 
-    // Query with template variables
-    query: `
-      SELECT
-          Parent._record_id AS parent_record_id,
-          Parent.date AS parent_date,
-          Parent.name AS parent_name,
-          Repeat.*
-      FROM
-          "Landcare Activity Tracking Form_{{landcareGroup}}" AS Parent
-      JOIN
-          "Landcare Activity Tracking Form_{{landcareGroup}}/weed_hotspot" AS Repeat
-      ON
-          Parent._record_id = Repeat._parent_id
-      WHERE
-          Parent.date >= '{{startDate}}'
-    `,
+    // Build query dynamically with user context
+    query: (ctx: UserContext) => {
+      const formName = getFormNameForGroup(ctx.user.landcareGroup);
 
-    // 🔒 SECURE: Extract variables from user context using allow-list
-    templateVars: (ctx: UserContext) => ({
-      landcareGroup: getFormNameForGroup(ctx.user.landcareGroup),
-      startDate: getStartDate(ctx.user.group),
-    }),
+      return `
+        SELECT
+            Parent._record_id AS parent_record_id,
+            Parent.date AS parent_date,
+            Parent.name AS parent_name,
+            Repeat.*
+        FROM
+            "Landcare Activity Tracking Form_${formName}" AS Parent
+        JOIN
+            "Landcare Activity Tracking Form_${formName}/weed_hotspot" AS Repeat
+        ON
+            Parent._record_id = Repeat._parent_id;
+      `;
+    },
   },
 
   Component: WeedSurveyComponent,
 
   shouldShow: (data) => data.length > 0,
 };
-
-// Helper function (local to this layer)
-function getStartDate(group?: string): string {
-  // Example: admins see all data, users see last year
-  if (group === "admin") {
-    return "2020-01-01T00:00:00.000Z";
-  }
-  const lastYear = new Date();
-  lastYear.setFullYear(lastYear.getFullYear() - 1);
-  return lastYear.toISOString();
-}

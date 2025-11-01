@@ -3,7 +3,6 @@ import { RMarker } from "maplibre-react-components";
 import {
   LayerComponentProps,
   LayerConfig,
-  UserContext,
 } from "../../config/layerRegistry";
 import * as Colors from "../../../shared/constants/Colors";
 
@@ -239,16 +238,12 @@ export const birdFeedLayer: LayerConfig<BirdData[]> = {
   dataSource: {
     type: "graphql",
     query: `
-            query StationsInBox($ne: InputLocation!, $sw: InputLocation!) {
-                stations(ne: $ne, sw: $sw) {
+            query StationsInBox {
+                stations(ne: {lat: -36.87034, lon: 143.157963}, sw: {lat: -37.25989, lon: 142.428217}) {
                     nodes { id name location coords { lat lon } }
                 }
             }
         `,
-    templateVars: (ctx: UserContext) => ({
-      ne: { lat: -36.87034, lon: 143.157963 },
-      sw: { lat: -37.25989, lon: 142.428217 },
-    }),
     transform: async (data: any) => {
       const stations = data.stations.nodes;
       const speciesQuery = `

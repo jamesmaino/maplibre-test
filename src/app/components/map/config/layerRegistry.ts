@@ -28,13 +28,10 @@ export interface LayerConfig<TData = any> {
     type: "fulcrum" | "graphql";
     requiresAuth?: "admin" | "user" | "public";
 
-    // Query with {{variable}} template syntax (Fulcrum) or GraphQL query
-    query: string;
-
-    // Extract template variables from user context
-    // For Fulcrum: returns Record<string, string> for template replacement
-    // For GraphQL: returns Record<string, any> for GraphQL variables
-    templateVars?: (userContext: UserContext) => Record<string, any>;
+    // Query can be:
+    // - Static string (for simple queries)
+    // - Function that receives UserContext and returns query string
+    query: string | ((userContext: UserContext) => string);
 
     // Transform raw API response
     transform?: (rawData: any) => TData | Promise<TData>;
@@ -77,11 +74,11 @@ export const LAYER_REGISTRY: Record<string, readonly PageLayerConfig[]> = {
   // BioLinks - main ecological monitoring page
   biolinks: [
     { layer: vegetationLayer, defaultVisible: true },
-    { layer: iNaturalistLayer, defaultVisible: true },
-    { layer: birdFeedLayer, defaultVisible: true },
-    { layer: squirrelGliderLayer, defaultVisible: true },
+    { layer: iNaturalistLayer, defaultVisible: false },
+    { layer: birdFeedLayer, defaultVisible: false },
+    { layer: squirrelGliderLayer, defaultVisible: false },
     { layer: transectLayer, defaultVisible: false },
-    { layer: historicalSitesLayer, defaultVisible: false },
+    { layer: historicalSitesLayer, defaultVisible: true },
   ],
 
   // Weed management page
@@ -92,8 +89,8 @@ export const LAYER_REGISTRY: Record<string, readonly PageLayerConfig[]> = {
 
   // Heritage/historical sites page
   heritage: [
-    { layer: vegetationLayer, defaultVisible: true },
     { layer: historicalSitesLayer, defaultVisible: true },
+    { layer: vegetationLayer, defaultVisible: true },
   ],
 } as const;
 

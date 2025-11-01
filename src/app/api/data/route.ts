@@ -15,8 +15,6 @@ import {
 
 } from "@/app/components/map/config/layerRegistry";
 
-import { applyTemplate } from "@/utils/queryTemplates";
-
 import { fetcherRegistry } from "./fetcher-registry";
 
 import { checkAuth } from "./auth";
@@ -59,44 +57,19 @@ async function fetchLayerData(
 
 
 
-    // Apply template variables to query
-
-    let queryStr = layer.dataSource.query;
-
-    let variables = {};
-
-    if (layer.dataSource.templateVars) {
-
-      variables = layer.dataSource.templateVars(userContext);
-
-      // Only apply string template replacement for Fulcrum queries
-
-      if (layer.dataSource.type === "fulcrum") {
-
-        queryStr = applyTemplate(queryStr, variables as Record<string, string>);
-
-      }
-
-    }
-
-
+    // Get query string (either static or from function)
+    const queryStr = typeof layer.dataSource.query === "function"
+      ? layer.dataSource.query(userContext)
+      : layer.dataSource.query;
 
     // Fetch data based on source type
-
     console.log(`Fetching ${queryStr}`)
 
-
-
     let rawData: any;
-
     const fetcher = fetcherRegistry[layer.dataSource.type];
 
-
-
     if (fetcher) {
-
-      rawData = await fetcher(queryStr, variables);
-
+      rawData = await fetcher(queryStr, {});
     }
 
     else {

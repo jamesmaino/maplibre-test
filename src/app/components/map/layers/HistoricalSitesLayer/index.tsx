@@ -85,13 +85,13 @@ function HistoricalSitesComponent({
   const ids = getLayerIds(layerId);
 
   const handleClick = (e: MapLayerMouseEvent) => {
-    if (e.defaultPrevented) {
+    // Check if another layer already handled this click (Stack Overflow pattern)
+    if (e.originalEvent.defaultPrevented) {
       return;
     }
 
     if (e.features && e.features.length > 0) {
       e.originalEvent.preventDefault();
-      e.originalEvent.stopPropagation();
       onPopupOpen({
         longitude: e.lngLat.lng,
         latitude: e.lngLat.lat,

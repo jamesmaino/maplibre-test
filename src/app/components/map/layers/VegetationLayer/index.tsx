@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { RLayer } from "maplibre-react-components";
+import { useState, useEffect, useRef } from "react";
+import { RLayer, useMap } from "maplibre-react-components";
 import { MapLayerMouseEvent } from "maplibre-gl";
 import * as Colors from "../../../shared/constants/Colors";
 import { LayerConfig, LayerComponentProps } from "../../config/layerRegistry";
@@ -12,13 +12,44 @@ import { LayerConfig, LayerComponentProps } from "../../config/layerRegistry";
 
 function VegetationComponent({ onPopupOpen }: LayerComponentProps) {
   const [selectedEVC, setSelectedEVC] = useState<string | number | null>(null);
+  const map = useMap();
+  const layerClickedRef = useRef(false);
+
+  // Add map-level click handler to clear selection when clicking off vegetation
+  useEffect(() => {
+    if (!map) return;
+
+    const handleMapClick = (e: MapLayerMouseEvent) => {
+      // If the layer click handler was triggered, don't do anything
+      if (layerClickedRef.current) {
+        layerClickedRef.current = false;
+        return;
+      }
+
+      // Only clear if another layer didn't handle it
+      if (!e.originalEvent.defaultPrevented) {
+        setSelectedEVC(null);
+      }
+    };
+
+    map.on("click", handleMapClick);
+
+    return () => {
+      map.off("click", handleMapClick);
+    };
+  }, [map]);
 
   const handleClick = (e: MapLayerMouseEvent) => {
-    if (e.defaultPrevented) {
+    // Check if another layer already handled this click (Stack Overflow pattern)
+    if (e.originalEvent.defaultPrevented) {
       return;
     }
+
     if (e.features && e.features.length > 0) {
-      e.preventDefault();
+      // Mark that layer was clicked
+      layerClickedRef.current = true;
+
+      e.originalEvent.preventDefault();
       const feature = e.features[0];
       const evc = feature.properties.EVC;
       setSelectedEVC(evc);
@@ -27,8 +58,6 @@ function VegetationComponent({ onPopupOpen }: LayerComponentProps) {
         latitude: e.lngLat.lat,
         properties: feature.properties,
       });
-    } else {
-      setSelectedEVC(null);
     }
   };
 
@@ -39,6 +68,7 @@ function VegetationComponent({ onPopupOpen }: LayerComponentProps) {
         source="protomaps"
         source-layer="NV2005_EVCBCS_subset"
         type="fill"
+        beforeId="historicalSites-fill"
         paint={{
           "fill-color": [
             "match",
@@ -67,23 +97,22 @@ function VegetationComponent({ onPopupOpen }: LayerComponentProps) {
         }}
         onClick={handleClick}
       />
+      <RLayer
+        id="vic-highlight"
+        source="protomaps"
+        source-layer="NV2005_EVCBCS_subset"
+        type="line"
+        beforeId="historicalSites-fill"
+        paint={{
+          "line-color": "#444444",
+          "line-width": 1,
+          "line-opacity": selectedEVC ? 1 : 0,
+        }}
+        filter={selectedEVC ? ["==", ["get", "EVC"], selectedEVC] : ["==", ["get", "EVC"], ""]}
+      />
     </>
   );
 }
-
-//  {selectedEVC && (
-//         <RLayer
-//           id="vic-highlight"
-//           source="protomaps"
-//           source-layer="NV2005_EVCBCS_subset"
-//           type="line"
-//           paint={{
-//             "line-color": "#444444",
-//             "line-width": 1,
-//           }}
-//           filter={["==", ["get", "EVC"], selectedEVC]}
-//         />
-//       )}
 
 // ==========================================
 // 3. Layer Configuration
